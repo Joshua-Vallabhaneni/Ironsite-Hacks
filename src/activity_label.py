@@ -91,7 +91,13 @@ def label_frames(
 
     to_label = _select_frames_to_label(enriched_keyframes)
     if not to_label:
-        log.warning("No frames with saved frame_path available for activity labeling")
+        sample = enriched_keyframes[:3]
+        has_paths = [bool(kf.get("frame_path")) for kf in sample]
+        has_reason = [kf.get("reason") for kf in sample]
+        log.warning(
+            f"No frames with saved frame_path available for activity labeling. "
+            f"Sample frame_path present: {has_paths}, reasons: {has_reason}"
+        )
         return {}
 
     log.info(
@@ -221,21 +227,27 @@ def _label_batch(model, batch: List[dict], output_dir: str) -> Dict[str, dict]:
 
     images = []
     valid_kfs = []
+    missing_paths = []
 
     for kf in batch:
         frame_path = kf.get("frame_path", "")
         full_path = os.path.join(output_dir, frame_path) if frame_path else ""
         if not full_path or not os.path.exists(full_path):
-            log.debug(f"Frame not on disk, skipping: {full_path}")
+            missing_paths.append(full_path or "(no frame_path set)")
             continue
         try:
-            img = PIL.Image.open(full_path).copy()  # .copy() forces eager load
+            img = PIL.Image.open(full_path).convert("RGB")  # convert ensures compatibility
             images.append(img)
             valid_kfs.append(kf)
         except Exception as e:
-            log.debug(f"Cannot open frame {full_path}: {e}")
+            log.warning(f"Cannot open frame {full_path}: {e}")
 
     if not images:
+        log.warning(
+            f"No images loaded for batch of {len(batch)} frames. "
+            f"output_dir={output_dir!r}. "
+            f"Missing/bad paths: {missing_paths[:3]}"
+        )
         return {}
 
     n = len(images)
