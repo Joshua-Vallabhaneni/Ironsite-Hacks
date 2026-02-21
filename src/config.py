@@ -58,3 +58,35 @@ FRAME_SAVE_SIZE = (640, 480)    # saved keyframe resolution
 CROP_PADDING = 0.1              # padding around crop bboxes (fraction)
 CLIP_FPS = 15                   # output clip framerate
 MAX_CLIP_DURATION = 12          # max ±4s = 8s, add buffer
+
+# ─── Activity Labeling (Phase 2.5) ───────────────────────────────────────────────────────────────────
+ACTIVITY_LABEL_INTERVAL_SEC = 30.0   # label 1 uniform frame per 30s per video
+ACTIVITY_LABEL_BATCH_SIZE = 8        # frames per Gemini call
+ACTIVITY_LABEL_CONF_THRESH = 0.6     # min label confidence to override signals
+ACTIVITY_LABEL_INTERP_SEC = 20.0     # propagate label to frames within +/-20s
+
+# Activity -> interaction_density override mapping
+ACTIVITY_INTERACTION_MAP = {
+    "brick_laying":        0.85,
+    "mortar_application":  0.85,
+    "material_handling":   0.65,
+    "scaffolding":         0.60,
+    "measuring":           0.55,
+    "inspection":          0.50,
+    "other":               0.35,
+    "repositioning":       0.30,
+    "idle":                0.10,
+}
+
+# Productivity classification buckets
+ACTIVITY_DIRECT_WORK     = frozenset({"brick_laying", "mortar_application",
+                                       "material_handling", "scaffolding"})
+ACTIVITY_CONTRIBUTORY    = frozenset({"measuring", "inspection", "repositioning", "other"})
+ACTIVITY_NONCONTRIBUTORY = frozenset({"idle"})
+
+# ─── Sustained Work Event ────────────────────────────────────────────────────────────────────────────
+T_SUSTAINED_WORK_SEC = 60.0          # min duration to fire a sustained_work event
+
+# ─── Task Transition Deduplication ───────────────────────────────────────────────────────────────────
+MIN_TRANSITION_GAP_SEC = 30.0        # merge transitions closer than this
+MAX_TRANSITIONS_PER_VIDEO = 10       # hard cap per video after deduplication

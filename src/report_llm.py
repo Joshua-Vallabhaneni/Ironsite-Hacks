@@ -250,10 +250,13 @@ def merge_baseline_summaries(
 def _filter_events_for_section(section_name: str, events: List[dict]) -> List[dict]:
     """Filter events relevant to a report section."""
     section_map = {
-        "safety": ["near_miss_proxy", "occlusion_critical", "approach_hazard_proxy"],
+        "safety": [
+            "near_miss_proxy", "occlusion_critical",
+            "approach_hazard_proxy", "ppe_violation",
+        ],
         "ergonomics": ["rework_proxy"],
-        "productivity": ["idle_streak", "task_transition"],
-        "quality": ["verification_moment", "rework_proxy"],
+        "productivity": ["idle_streak", "task_transition", "sustained_work"],
+        "quality": ["verification_moment", "rework_proxy", "sustained_work"],
     }
 
     relevant_types = section_map.get(section_name.lower(), [])
@@ -268,7 +271,8 @@ def _build_section_prompt(section_name: str, events_json: str, metrics: dict) ->
     section_prompts = {
         "safety": (
             f"Write the SAFETY DESK section of a construction daily report. "
-            f"Organize findings under: Falls, Struck-By, Caught-In/Between, Electrical. "
+            f"First, report any ppe_violation events under a 'PPE Compliance' heading. "
+            f"Then organize remaining findings under: Falls, Struck-By, Caught-In/Between, Electrical. "
             f"For each subsection: report exposure minutes, event count, and top 3 events. "
             f"Each event citation must be in format [EVENT_ID @ HH:MM:SS].\n\n"
             f"Safety Score: {metrics.get('safety', {}).get('score', 'N/A')}/100\n\n"
@@ -291,8 +295,9 @@ def _build_section_prompt(section_name: str, events_json: str, metrics: dict) ->
         ),
         "quality": (
             f"Write the QUALITY & PROGRESS section. "
-            f"List key activities detected with timestamps, rework signals, "
-            f"and verification moments. Cite events as [EVENT_ID @ HH:MM:SS].\n\n"
+            f"List sustained_work periods (these show productive focused work), "
+            f"verification moments, and rework signals with timestamps. "
+            f"Cite events as [EVENT_ID @ HH:MM:SS].\n\n"
             f"Quality Score: {metrics.get('quality', {}).get('score', 'N/A')}/100\n\n"
             f"Events:\n{events_json}"
         ),

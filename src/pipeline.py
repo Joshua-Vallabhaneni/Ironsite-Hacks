@@ -237,6 +237,30 @@ def _run_augmented_or_rules(
 
     log.info(f"Total enriched keyframes: {len(enriched_keyframes)}")
 
+    # --- Initialize Gemini budget tracker (shared across phases 2.5, 4, 6) ---
+    tracker = None
+    if use_llm:
+        budget = args.gemini_budget or config.GEMINI_BUDGET
+        tracker = GeminiBudgetTracker(budget)
+        log.info(f"Gemini budget: {budget} calls")
+
+    # --- Phase 2.5: Activity Labeling (augmented only) ---
+    if use_llm and tracker:
+        log.info("=" * 40)
+        log.info("PHASE 2.5: Gemini Activity Labeling")
+        log.info("=" * 40)
+
+        from . import activity_label as activity_label_module
+
+        activity_labels = activity_label_module.label_frames(
+            enriched_keyframes, output_dir, tracker
+        )
+        activity_label_module.apply_labels_to_keyframes(enriched_keyframes, activity_labels)
+        log.info(
+            f"Activity labeling complete: {len(activity_labels)} frames labeled. "
+            f"Gemini budget after labeling: {tracker}"
+        )
+
     # --- Phase 3: Event Extraction ---
     log.info("=" * 40)
     log.info("PHASE 3: Event Extraction")
@@ -248,14 +272,12 @@ def _run_augmented_or_rules(
     log.info(f"Total events extracted: {len(events)}")
 
     # --- Phase 4: Spatial Query (augmented only) ---
-    tracker = None
-    if use_llm:
+    if use_llm and tracker:
         log.info("=" * 40)
         log.info("PHASE 4: Spatial Query Loop")
         log.info("=" * 40)
 
-        budget = args.gemini_budget or config.GEMINI_BUDGET
-        tracker = GeminiBudgetTracker(budget)
+        # tracker already initialized above — reuse it
 
         from . import spatial_query
         events = spatial_query.run_spatial_queries(
