@@ -17,20 +17,21 @@ log = logging.getLogger(__name__)
 _model = None
 _transform = None
 _device = None
+_load_failed = False  # Cache load failure to avoid retrying every frame
 
 
 def _load_midas():
     """Load MiDaS model once via torch.hub."""
-    global _model, _transform, _device
+    global _model, _transform, _device, _load_failed
 
     if _model is not None:
         return
+    if _load_failed:
+        raise RuntimeError("MiDaS previously failed to load")
 
     _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     log.info(f"Loading MiDaS on {_device}...")
 
-    # Use MiDaS small for speed (DPT_SwinV2_T_256 is new small)
-    # Fallback chain for compatibility
     try:
         _model = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=True)
         _transform = torch.hub.load("intel-isl/MiDaS", "transforms", trust_repo=True).small_transform
@@ -39,6 +40,7 @@ def _load_midas():
             _model = torch.hub.load("intel-isl/MiDaS", "MiDaS_small")
             _transform = torch.hub.load("intel-isl/MiDaS", "transforms").small_transform
         except Exception as e:
+            _load_failed = True
             log.error(f"Failed to load MiDaS: {e}")
             raise
 
@@ -98,7 +100,7 @@ def _predict_midas(frame: np.ndarray) -> Tuple[np.ndarray, dict]:
     ch1, ch2 = h // 4, 3 * h // 4
     cw1, cw2 = w // 4, 3 * w // 4
     central_region = depth_normalized[ch1:ch2, cw1:cw2]
-    closest_obstacle = float(np.percentile(central_region, 90))  # 90th percentile = closest in normalized
+    closest_obstacle = float(np.percentile(central_region, 90))
 
     # Lower-center third for discontinuity_risk
     lc_top = 2 * h // 3

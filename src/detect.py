@@ -1,6 +1,7 @@
 """
 detect.py — MediaPipe Hands + YOLOv8 detection.
 Graceful None fallbacks — never crash on missing detections.
+Compatible with mediapipe >= 0.10.
 """
 import cv2
 import logging
@@ -13,32 +14,67 @@ log = logging.getLogger(__name__)
 
 # Module-level caches
 _mp_hands = None
+_mp_load_failed = False
 _yolo_model = None
+_yolo_load_failed = False
 
 
 def _load_mediapipe():
     """Load MediaPipe Hands once."""
-    global _mp_hands
+    global _mp_hands, _mp_load_failed
     if _mp_hands is not None:
+        return
+    if _mp_load_failed:
         return
 
     try:
-        import mediapipe as mp
-        _mp_hands = mp.solutions.hands.Hands(
-            static_image_mode=True,
-            max_num_hands=2,
-            min_detection_confidence=0.3,  # low threshold; we filter by our own config
-        )
-        log.info("MediaPipe Hands loaded")
+        # Try new-style API first (mediapipe >= 0.10.8)
+        try:
+            from mediapipe.tasks.python import vision
+            from mediapipe.tasks.python.core import base_options as base_options_module
+            import mediapipe as mp
+
+            # Try the solutions API first (older mediapipe)
+            if hasattr(mp, 'solutions') and hasattr(mp.solutions, 'hands'):
+                _mp_hands = mp.solutions.hands.Hands(
+                    static_image_mode=True,
+                    max_num_hands=2,
+                    min_detection_confidence=0.3,
+                )
+                log.info("MediaPipe Hands loaded (solutions API)")
+                return
+        except (ImportError, AttributeError):
+            pass
+
+        # Try solutions import directly
+        try:
+            import mediapipe as mp
+            if hasattr(mp, 'solutions') and hasattr(mp.solutions, 'hands'):
+                _mp_hands = mp.solutions.hands.Hands(
+                    static_image_mode=True,
+                    max_num_hands=2,
+                    min_detection_confidence=0.3,
+                )
+                log.info("MediaPipe Hands loaded (solutions API)")
+                return
+        except (ImportError, AttributeError):
+            pass
+
+        # If we get here, MediaPipe hands isn't available in this version
+        _mp_load_failed = True
+        log.warning("MediaPipe Hands not available in this version — hand detection disabled, using YOLO person fallback")
+
     except Exception as e:
+        _mp_load_failed = True
         log.warning(f"Failed to load MediaPipe Hands: {e}")
-        _mp_hands = None
 
 
 def _load_yolo():
     """Load YOLOv8 model once."""
-    global _yolo_model
+    global _yolo_model, _yolo_load_failed
     if _yolo_model is not None:
+        return
+    if _yolo_load_failed:
         return
 
     try:
@@ -46,8 +82,8 @@ def _load_yolo():
         _yolo_model = YOLO(config.YOLO_MODEL)
         log.info(f"YOLOv8 loaded: {config.YOLO_MODEL}")
     except Exception as e:
+        _yolo_load_failed = True
         log.warning(f"Failed to load YOLOv8: {e}")
-        _yolo_model = None
 
 
 def detect_hands(frame: np.ndarray) -> dict:
