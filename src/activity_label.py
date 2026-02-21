@@ -259,7 +259,7 @@ def _label_batch(model, batch: List[dict], output_dir: str) -> Dict[str, dict]:
             content,
             generation_config={
                 "temperature": 0.1,
-                "max_output_tokens": max(512, 200 * n),
+                "max_output_tokens": min(8192, max(2048, 500 * n)),
             },
         )
 
@@ -278,7 +278,8 @@ def _label_batch(model, batch: List[dict], output_dir: str) -> Dict[str, dict]:
         if parsed is None:
             log.warning(
                 f"Could not parse activity labels from Gemini response "
-                f"(batch n={n}). Preview: {text[:200]!r}"
+                f"(batch n={n}, response_len={len(text)}). "
+                f"Start: {text[:300]!r} ... End: {text[-100:]!r}"
             )
             return {}
 
@@ -308,33 +309,47 @@ def _parse_label_array(text: str, expected_n: int) -> Optional[List[dict]]:
     """Parse a JSON array from Gemini response, tolerating common formatting issues."""
     clean = text.strip()
 
-    # Strip markdown fences
-    if clean.startswith("```"):
-        lines = clean.split("\n")
-        lines = [l for l in lines if not l.strip().startswith("```")]
-        clean = "\n".join(lines).strip()
+    # Strip markdown fences (```json...``` or ```...```)
+    clean = re.sub(r"^```[a-zA-Z]*\s*", "", clean)
+    clean = re.sub(r"\s*```\s*$", "", clean)
+    clean = clean.strip()
 
-    # Direct parse
-    try:
-        parsed = json.loads(clean)
-        if isinstance(parsed, list):
-            return parsed
-        if isinstance(parsed, dict):
-            for v in parsed.values():
-                if isinstance(v, list) and v:
-                    return v
-    except json.JSONDecodeError:
-        pass
+    def _fix_trailing_commas(s: str) -> str:
+        """Remove trailing commas before } or ] — common LLM JSON mistake."""
+        return re.sub(r",(\s*[}\]])", r"\1", s)
 
-    # Find array via regex
-    match = re.search(r"\[[\s\S]*\]", clean)
-    if match:
+    def _try_parse(s: str) -> Optional[list]:
+        # Direct parse
         try:
-            parsed = json.loads(match.group())
+            parsed = json.loads(s)
+            if isinstance(parsed, list):
+                return parsed
+            if isinstance(parsed, dict):
+                for v in parsed.values():
+                    if isinstance(v, list) and v:
+                        return v
+        except json.JSONDecodeError:
+            pass
+        # Fix trailing commas and retry
+        try:
+            parsed = json.loads(_fix_trailing_commas(s))
             if isinstance(parsed, list):
                 return parsed
         except json.JSONDecodeError:
             pass
+        return None
+
+    # Direct parse attempt
+    result = _try_parse(clean)
+    if result is not None:
+        return result
+
+    # Extract outermost JSON array via regex and retry
+    match = re.search(r"\[[\s\S]*\]", clean)
+    if match:
+        result = _try_parse(match.group())
+        if result is not None:
+            return result
 
     return None
 

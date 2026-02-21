@@ -61,7 +61,7 @@ MAX_CLIP_DURATION = 12          # max ±4s = 8s, add buffer
 
 # ─── Activity Labeling (Phase 2.5) ───────────────────────────────────────────────────────────────────
 ACTIVITY_LABEL_INTERVAL_SEC = 30.0   # label 1 uniform frame per 30s per video
-ACTIVITY_LABEL_BATCH_SIZE = 8        # frames per Gemini call
+ACTIVITY_LABEL_BATCH_SIZE = 4        # frames per Gemini call (smaller = less output token pressure)
 ACTIVITY_LABEL_CONF_THRESH = 0.6     # min label confidence to override signals
 ACTIVITY_LABEL_INTERP_SEC = 20.0     # propagate label to frames within +/-20s
 
