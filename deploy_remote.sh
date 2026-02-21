@@ -32,7 +32,7 @@ echo "=== Installing dependencies ==="
 pip install -r requirements.txt
 
 echo "=== Setting API key ==="
-export GEMINI_API_KEY="AIzaSyCeBsFbbfb07RmKNBeCx8MH5n6bRrxQ4Wg"
+export GEMINI_API_KEY=""
 
 echo "=== Running pipeline (rules_only, 1 video test) ==="
 python -m src.pipeline \
