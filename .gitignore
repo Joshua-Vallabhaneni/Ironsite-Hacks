@@ -1,0 +1,13 @@
+# Ironsite Pipeline - Ignore Rules
+outputs/
+.env
+__pycache__/
+*.pyc
+*.pth
+*.pt
+.DS_Store
+*.egg-info/
+dist/
+build/
+.eggs/
+IronsiteHackathonData/
