@@ -47,7 +47,7 @@ SPATIAL_QUERY_MIN_CONF = 0.5    # minimum bbox confidence for crop+re-query
 # ─── Gemini Budgets ──────────────────────────────────────────
 GEMINI_BUDGET = 200             # augmented mode budget
 GEMINI_BUDGET_BASELINE = 100    # baseline mode budget
-GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 # ─── Baseline Mode ───────────────────────────────────────────
 BASELINE_MAX_FRAMES = 200       # total frames across all videos for baseline
