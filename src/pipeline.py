@@ -11,6 +11,13 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+# Load .env file before anything else reads env vars
+try:
+    from dotenv import load_dotenv
+    load_dotenv(Path(__file__).resolve().parent.parent / ".env")
+except ImportError:
+    pass
+
 from . import config
 from . import video_io
 from . import scene_select
