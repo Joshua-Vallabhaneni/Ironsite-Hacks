@@ -61,13 +61,17 @@ def _call_gemini_with_image(model, image_path: str, prompt: str,
         response = model.generate_content(
             [prompt, img],
             generation_config={"temperature": 0.1, "max_output_tokens": 1024},
-            request_options={"timeout": timeout},
         )
 
-        if response and response.text:
-            return response.text.strip()
+        text = None
+        try:
+            text = response.text
+        except ValueError as ve:
+            log.error(f"Gemini spatial query response blocked: {ve}")
+        if text and text.strip():
+            return text.strip()
     except Exception as e:
-        log.warning(f"Gemini call failed: {e}")
+        log.error(f"Gemini spatial query FAILED: {type(e).__name__}: {e}")
 
     return None
 

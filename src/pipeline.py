@@ -80,6 +80,33 @@ def parse_args():
     return args
 
 
+def _verify_gemini():
+    """Pre-flight check: verify Gemini API is reachable. Exits on failure."""
+    print("\n>>> GEMINI PRE-FLIGHT CHECK", flush=True)
+    try:
+        import google.generativeai as genai
+        api_key = os.environ.get("GEMINI_API_KEY", "")
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(config.GEMINI_MODEL)
+        response = model.generate_content(
+            "Reply with the single word READY.",
+            generation_config={"temperature": 0, "max_output_tokens": 10},
+        )
+        text = ""
+        try:
+            text = response.text.strip()
+        except Exception:
+            text = "(no text in response)"
+        print(f">>> GEMINI OK — model={config.GEMINI_MODEL}  response='{text}'", flush=True)
+        log.info(f"Gemini pre-flight PASSED: model={config.GEMINI_MODEL}")
+    except Exception as e:
+        print(f">>> GEMINI FAILED — {type(e).__name__}: {e}", flush=True)
+        log.error(f"Gemini pre-flight FAILED: {type(e).__name__}: {e}")
+        log.error("Cannot proceed in augmented/baseline mode without Gemini.")
+        sys.exit(1)
+    print("", flush=True)
+
+
 def run_pipeline(args):
     """Main pipeline execution."""
     # Setup logging
@@ -101,6 +128,7 @@ def run_pipeline(args):
             log.error("GEMINI_API_KEY environment variable not set!")
             log.error("Run: export GEMINI_API_KEY='your-key-here'")
             sys.exit(1)
+        _verify_gemini()
 
     # Apply config overrides
     if args.sample_every_sec:

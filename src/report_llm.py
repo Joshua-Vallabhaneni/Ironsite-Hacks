@@ -66,13 +66,17 @@ def generate_narrative_section(
         response = model.generate_content(
             prompt,
             generation_config={"temperature": 0.2, "max_output_tokens": 2048},
-            request_options={"timeout": 30},
         )
-
-        if response and response.text:
-            return response.text.strip()
+        text = None
+        try:
+            text = response.text
+        except ValueError as ve:
+            log.error(f"Gemini response blocked for {section_name}: {ve}")
+        if text and text.strip():
+            log.info(f"Gemini narrative OK for section={section_name} ({len(text)} chars)")
+            return text.strip()
     except Exception as e:
-        log.warning(f"Gemini narrative generation failed for {section_name}: {e}")
+        log.error(f"Gemini narrative FAILED for {section_name}: {type(e).__name__}: {e}")
 
     return f"*[Narrative generation failed for {section_name}]*\n"
 
@@ -111,12 +115,17 @@ def generate_headlines(
         response = model.generate_content(
             prompt,
             generation_config={"temperature": 0.3, "max_output_tokens": 1024},
-            request_options={"timeout": 20},
         )
-        if response and response.text:
-            return response.text.strip()
+        text = None
+        try:
+            text = response.text
+        except ValueError as ve:
+            log.error(f"Gemini headlines response blocked: {ve}")
+        if text and text.strip():
+            log.info(f"Gemini headlines OK ({len(text)} chars)")
+            return text.strip()
     except Exception as e:
-        log.warning(f"Headline generation failed: {e}")
+        log.error(f"Gemini headline generation FAILED: {type(e).__name__}: {e}")
 
     return _fallback_headlines(events, metrics)
 
@@ -178,12 +187,16 @@ def generate_baseline_summary(
         response = model.generate_content(
             content,
             generation_config={"temperature": 0.3, "max_output_tokens": 2048},
-            request_options={"timeout": 30},
         )
-        if response and response.text:
-            return response.text.strip()
+        text = None
+        try:
+            text = response.text
+        except ValueError as ve:
+            log.error(f"Gemini baseline chunk {chunk_index} response blocked: {ve}")
+        if text and text.strip():
+            return text.strip()
     except Exception as e:
-        log.warning(f"Baseline chunk {chunk_index} generation failed: {e}")
+        log.error(f"Gemini baseline chunk {chunk_index} FAILED: {type(e).__name__}: {e}")
 
     return ""
 
@@ -220,12 +233,16 @@ def merge_baseline_summaries(
         response = model.generate_content(
             prompt,
             generation_config={"temperature": 0.2, "max_output_tokens": 4096},
-            request_options={"timeout": 45},
         )
-        if response and response.text:
-            return response.text.strip()
+        text = None
+        try:
+            text = response.text
+        except ValueError as ve:
+            log.error(f"Gemini baseline merge response blocked: {ve}")
+        if text and text.strip():
+            return text.strip()
     except Exception as e:
-        log.warning(f"Baseline merge failed: {e}")
+        log.error(f"Gemini baseline merge FAILED: {type(e).__name__}: {e}")
 
     return combined
 
