@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JARVIS – Personal AI Site Analysis</title>
+  <meta name="description" content="JARVIS is your personal AI site intelligence system for construction site analysis — safety, ergonomics, productivity, and quality reporting.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 1 — VIDEO UPLOAD SCREEN
+     ═══════════════════════════════════════════ -->
+<section id="page-upload" class="page-upload">
+
+  <!-- JARVIS Orb -->
+  <div class="orb-container">
+    <div class="orb speaking" id="upload-orb">
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-core"></div>
+      <div class="orb-pulse-ring"></div>
+      <div class="orb-pulse-ring"></div>
+    </div>
+  </div>
+
+  <h1 class="upload-title">JARVIS</h1>
+  <p class="upload-subtitle">Construction Intelligence System</p>
+
+  <!-- Waveform -->
+  <div class="waveform active" id="upload-waveform"></div>
+
+  <!-- Status -->
+  <div class="status-indicator speaking" id="upload-status">
+    <span class="pulse-dot"></span> JARVIS IS SPEAKING...
+  </div>
+
+  <!-- Transcript -->
+  <div class="upload-transcript">
+    <div class="transcript" id="upload-transcript">
+      <div class="transcript-bubble jarvis">Good morning. I'm JARVIS — your personal site intelligence system. Please upload today's headcam footage to begin analysis.</div>
+    </div>
+  </div>
+
+  <!-- Drop Zone -->
+  <div class="drop-zone" id="drop-zone">
+    <div class="upload-icon">📁</div>
+    <h3>Drop headcam footage here or click to browse</h3>
+    <p>Upload your site video to start AI-powered analysis</p>
+    <div class="formats">MP4 · MOV · AVI · Max 10GB</div>
+  </div>
+
+  <input type="file" id="file-input" accept="video/*" style="display:none">
+
+  <!-- File info -->
+  <div class="file-info" id="file-info">
+    <div class="file-thumb">🎬</div>
+    <div class="file-details">
+      <div class="file-name" id="file-name">video.mp4</div>
+      <div class="file-size" id="file-size">1.2 GB</div>
+    </div>
+  </div>
+
+  <!-- Begin Analysis button -->
+  <button class="btn-analyze" id="btn-analyze">⚡ Begin Analysis</button>
+
+  <!-- Progress bar -->
+  <div class="progress-bar" id="progress-bar">
+    <div class="progress-steps">
+      <div class="progress-step" data-step="upload">
+        <div class="step-dot">1</div>
+        <div class="step-label">Upload</div>
+      </div>
+      <div class="progress-step" data-step="process">
+        <div class="step-dot">2</div>
+        <div class="step-label">Process</div>
+      </div>
+      <div class="progress-step" data-step="analyze">
+        <div class="step-dot">3</div>
+        <div class="step-label">Analyze</div>
+      </div>
+      <div class="progress-step" data-step="report">
+        <div class="step-dot">4</div>
+        <div class="step-label">Report</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     PAGE 2 — MAIN DASHBOARD
+     ═══════════════════════════════════════════ -->
+<section id="page-dashboard" class="page-dashboard">
+
+  <!-- ── JARVIS Left Panel ── -->
+  <aside class="jarvis-panel">
+    <div class="panel-header">
+      <h2>JARVIS</h2>
+      <p>Personal AI Site Analysis</p>
+    </div>
+
+    <div class="orb-container">
+      <div class="orb medium speaking" id="dashboard-orb">
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-ring"></div>
+        <div class="orb-core"></div>
+        <div class="orb-pulse-ring"></div>
+        <div class="orb-pulse-ring"></div>
+      </div>
+    </div>
+
+    <div class="waveform active" id="dashboard-waveform"></div>
+
+    <div class="status-indicator speaking" id="dashboard-status">
+      <span class="pulse-dot"></span> JARVIS IS SPEAKING...
+    </div>
+
+    <div class="transcript" id="dashboard-transcript">
+      <div class="transcript-bubble jarvis">Analysis complete. Today's report is ready. I've identified 2 high-priority safety events and your worker achieved a productivity score of 74. Shall I walk you through the highlights?</div>
+    </div>
+
+    <button class="mic-btn" id="mic-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        <line x1="12" y1="19" x2="12" y2="23"/>
+        <line x1="8" y1="23" x2="16" y2="23"/>
+      </svg>
+      Hold to Speak
+    </button>
+
+    <div class="panel-footer">
+      <div style="font-size:0.68rem; color:var(--text-dim);">February 21, 2026</div>
+      <div class="worker-chip"><span class="dot"></span> Marcus Rivera · Site #4</div>
+    </div>
+  </aside>
+
+  <!-- ── Report Content ── -->
+  <main class="report-content">
+    <!-- Header -->
+    <div class="report-header">
+      <h1 class="report-title">Daily Site Report — <span>Marcus Rivera · Feb 21, 2026</span></h1>
+
+      <!-- Score Badges -->
+      <div class="score-badges">
+        <!-- Safety -->
+        <div class="score-badge">
+          <div class="score-ring" data-score="82" data-color="#EF4444">
+            <svg viewBox="0 0 54 54"><circle class="bg-ring" cx="27" cy="27" r="23"/><circle class="fg-ring" cx="27" cy="27" r="23" stroke="#EF4444" stroke-dasharray="144.51" stroke-dashoffset="26"/></svg>
+            <span class="score-value" style="color:#EF4444">82</span>
+          </div>
+          <div class="score-info">
+            <div class="score-label">Safety</div>
+            <div class="score-trend up">▲ 4 vs yesterday</div>
+          </div>
+        </div>
+        <!-- Ergonomics -->
+        <div class="score-badge">
+          <div class="score-ring" data-score="68" data-color="#F59E0B">
+            <svg viewBox="0 0 54 54"><circle class="bg-ring" cx="27" cy="27" r="23"/><circle class="fg-ring" cx="27" cy="27" r="23" stroke="#F59E0B" stroke-dasharray="144.51" stroke-dashoffset="46.24"/></svg>
+            <span class="score-value" style="color:#F59E0B">68</span>
+          </div>
+          <div class="score-info">
+            <div class="score-label">Ergonomics</div>
+            <div class="score-trend down">▼ 2 vs yesterday</div>
+          </div>
+        </div>
+        <!-- Productivity -->
+        <div class="score-badge">
+          <div class="score-ring" data-score="74" data-color="#3B82F6">
+            <svg viewBox="0 0 54 54"><circle class="bg-ring" cx="27" cy="27" r="23"/><circle class="fg-ring" cx="27" cy="27" r="23" stroke="#3B82F6" stroke-dasharray="144.51" stroke-dashoffset="37.57"/></svg>
+            <span class="score-value" style="color:#3B82F6">74</span>
+          </div>
+          <div class="score-info">
+            <div class="score-label">Productivity</div>
+            <div class="score-trend up">▲ 6 vs yesterday</div>
+          </div>
+        </div>
+        <!-- Quality -->
+        <div class="score-badge">
+          <div class="score-ring" data-score="91" data-color="#10B981">
+            <svg viewBox="0 0 54 54"><circle class="bg-ring" cx="27" cy="27" r="23"/><circle class="fg-ring" cx="27" cy="27" r="23" stroke="#10B981" stroke-dasharray="144.51" stroke-dashoffset="13"/></svg>
+            <span class="score-value" style="color:#10B981">91</span>
+          </div>
+          <div class="score-info">
+            <div class="score-label">Quality</div>
+            <div class="score-trend up">▲ 1 vs yesterday</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <nav class="tab-nav">
+      <button class="tab-btn active" data-tab="overview">Overview</button>
+      <button class="tab-btn" data-tab="safety">Safety</button>
+      <button class="tab-btn" data-tab="ergonomics">Ergonomics</button>
+      <button class="tab-btn" data-tab="productivity">Productivity</button>
+      <button class="tab-btn" data-tab="quality">Quality</button>
+    </nav>
+
+    <!-- ═══ OVERVIEW TAB ═══ -->
+    <div class="tab-content active" id="tab-overview">
+      <h3 class="section-title">Key Findings</h3>
+      <div class="headline-cards">
+        <div class="headline-card warning" data-jarvis="I detected 2 near-miss events near the cutting zone between 10:12 AM and 10:34 AM. A worker's hand came within 6 inches of the active saw blade without proper guard positioning. I'd recommend reviewing the clip and reinforcing guard protocols.">
+          <div class="card-icon">⚠️</div>
+          <div class="card-text">
+            <h4>2 Near-Miss Events Detected Near Cutting Zone</h4>
+            <p>Worker hand proximity fell below safe threshold at 10:12 AM and 10:34 AM. Guard was not in resting position.</p>
+          </div>
+        </div>
+        <div class="headline-card success" data-jarvis="Excellent progress on the framing section today. The crew completed all 14 planned wall segments ahead of the 4:00 PM target. Quality checks passed on first inspection with no rework needed.">
+          <div class="card-icon">✅</div>
+          <div class="card-text">
+            <h4>Framing Section Completed on Schedule</h4>
+            <p>All 14 wall segments completed by 3:42 PM — 18 minutes ahead of target.</p>
+          </div>
+        </div>
+        <div class="headline-card info" data-jarvis="I flagged a 33-minute idle period between 2:14 PM and 2:47 PM. It appears the worker was waiting for material delivery at the staging area. This is a recurring pattern — consider adjusting the supply chain schedule.">
+          <div class="card-icon">🕐</div>
+          <div class="card-text">
+            <h4>33-Minute Idle Period Detected: 2:14 PM – 2:47 PM</h4>
+            <p>Worker appeared to be waiting for material at staging area. This is the 3rd occurrence this week.</p>
+          </div>
+        </div>
+        <div class="headline-card danger" data-jarvis="PPE compliance dropped during the afternoon shift. I detected two instances where safety glasses were not worn while operating the grinder between 1:30 PM and 1:45 PM.">
+          <div class="card-icon">🚨</div>
+          <div class="card-text">
+            <h4>PPE Compliance Issue — Safety Glasses</h4>
+            <p>Safety glasses were not detected during grinder operation at 1:30 PM and 1:45 PM.</p>
+          </div>
+        </div>
+        <div class="headline-card success" data-jarvis="Tool organization was excellent today. All power tools were returned to designated storage locations after each use, and the work area was kept clean throughout the shift.">
+          <div class="card-icon">🔧</div>
+          <div class="card-text">
+            <h4>Tool Organization Score: Excellent</h4>
+            <p>100% return-to-storage compliance. Work area maintained throughout shift.</p>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="section-title mt-lg">Must-Watch Clips</h3>
+      <div class="clips-reel">
+        <div class="clip-card" data-jarvis="This clip shows the first near-miss event at the cutting station. Watch the hand position relative to the blade guard.">
+          <div class="clip-thumb">
+            <span class="play-icon">▶</span>
+            <span class="clip-timestamp">10:12:34</span>
+          </div>
+          <div class="clip-info">
+            <div class="clip-label">Cutting Zone Near-Miss #1</div>
+            <div class="clip-tags">
+              <span class="chip safety">Safety</span>
+              <span class="chip high">High</span>
+            </div>
+          </div>
+        </div>
+        <div class="clip-card" data-jarvis="Second near-miss event. The blade guard was not repositioned after the previous cut. This is a correctable behavior with proper training reinforcement.">
+          <div class="clip-thumb">
+            <span class="play-icon">▶</span>
+            <span class="clip-timestamp">10:34:11</span>
+          </div>
+          <div class="clip-info">
+            <div class="clip-label">Cutting Zone Near-Miss #2</div>
+            <div class="clip-tags">
+              <span class="chip safety">Safety</span>
+              <span class="chip high">High</span>
+            </div>
+          </div>
+        </div>
+        <div class="clip-card" data-jarvis="This is the idle period I flagged. Notice the worker standing at the staging area, checking his phone intermittently. The material truck arrived at 2:47 PM.">
+          <div class="clip-thumb">
+            <span class="play-icon">▶</span>
+            <span class="clip-timestamp">02:14:00</span>
+          </div>
+          <div class="clip-info">
+            <div class="clip-label">Extended Idle Period</div>
+            <div class="clip-tags">
+              <span class="chip info">Productivity</span>
+              <span class="chip medium">Medium</span>
+            </div>
+          </div>
+        </div>
+        <div class="clip-card" data-jarvis="The final framing segment being installed. Great teamwork and coordination on display here.">
+          <div class="clip-thumb">
+            <span class="play-icon">▶</span>
+            <span class="clip-timestamp">03:42:18</span>
+          </div>
+          <div class="clip-info">
+            <div class="clip-label">Framing Completion Moment</div>
+            <div class="clip-tags">
+              <span class="chip success">Quality</span>
+              <span class="chip low">Low</span>
+            </div>
+          </div>
+        </div>
+        <div class="clip-card" data-jarvis="PPE violation captured here. Worker removed safety glasses before the grinder fully stopped. This is a disciplinary-level violation.">
+          <div class="clip-thumb">
+            <span class="play-icon">▶</span>
+            <span class="clip-timestamp">01:30:45</span>
+          </div>
+          <div class="clip-info">
+            <div class="clip-label">PPE Non-Compliance</div>
+            <div class="clip-tags">
+              <span class="chip safety">Safety</span>
+              <span class="chip high">High</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ SAFETY TAB ═══ -->
+    <div class="tab-content" id="tab-safety">
+      <h3 class="section-title">Hazard Categories</h3>
+      <div class="hazard-grid">
+        <!-- Falls -->
+        <div class="hazard-card">
+          <div class="hazard-header">
+            <div class="hazard-title">🪜 Falls</div>
+            <span class="chip low">Low Risk</span>
+          </div>
+          <div class="hazard-stats">
+            <div class="hazard-stat">
+              <div class="stat-value" style="color:var(--green)">0</div>
+              <div class="stat-label">Events</div>
+            </div>
+            <div class="hazard-stat">
+              <div class="stat-value">12m</div>
+              <div class="stat-label">Exposure</div>
+            </div>
+          </div>
+          <div class="event-row" data-jarvis="At 9:15 AM, the worker used the A-frame ladder near the east wall. Proper three-point contact was maintained throughout. Good job.">
+            <span class="event-time">9:15 AM</span>
+            <span class="event-desc">Ladder use — east wall (compliant)</span>
+          </div>
+          <div class="event-row" data-jarvis="At 11:30 AM, scaffolding was accessed at section B. Harness was clipped correctly.">
+            <span class="event-time">11:30 AM</span>
+            <span class="event-desc">Scaffolding access — section B (compliant)</span>
+          </div>
+        </div>
+
+        <!-- Struck-By -->
+        <div class="hazard-card">
+          <div class="hazard-header">
+            <div class="hazard-title">💥 Struck-By</div>
+            <span class="chip high">High Risk</span>
+          </div>
+          <div class="hazard-stats">
+            <div class="hazard-stat">
+              <div class="stat-value" style="color:var(--red)">2</div>
+              <div class="stat-label">Events</div>
+            </div>
+            <div class="hazard-stat">
+              <div class="stat-value">28m</div>
+              <div class="stat-label">Exposure</div>
+            </div>
+          </div>
+          <div class="event-row" data-jarvis="At 10:12 AM, the worker's hand was within 6 inches of the saw blade. The blade guard was not in position. This is a near-miss that requires immediate corrective action.">
+            <span class="event-time">10:12 AM</span>
+            <span class="event-desc">Hand proximity to saw blade — near miss</span>
+          </div>
+          <div class="event-row" data-jarvis="At 10:34 AM, a second near-miss occurred at the same station. The guard had not been repositioned after the previous cut.">
+            <span class="event-time">10:34 AM</span>
+            <span class="event-desc">Blade guard not repositioned — near miss</span>
+          </div>
+          <div class="event-row" data-jarvis="At 2:55 PM, a falling material event was detected near the staging area. No injuries, but the stacking height exceeded recommended limits.">
+            <span class="event-time">2:55 PM</span>
+            <span class="event-desc">Falling material near staging — no injury</span>
+          </div>
+        </div>
+
+        <!-- Caught-In/Between -->
+        <div class="hazard-card">
+          <div class="hazard-header">
+            <div class="hazard-title">⚙️ Caught-In/Between</div>
+            <span class="chip low">Low Risk</span>
+          </div>
+          <div class="hazard-stats">
+            <div class="hazard-stat">
+              <div class="stat-value" style="color:var(--green)">0</div>
+              <div class="stat-label">Events</div>
+            </div>
+            <div class="hazard-stat">
+              <div class="stat-value">5m</div>
+              <div class="stat-label">Exposure</div>
+            </div>
+          </div>
+          <div class="event-row" data-jarvis="No caught-in or between events detected today. All machinery operations followed lockout/tagout procedures correctly.">
+            <span class="event-time">—</span>
+            <span class="event-desc">No events detected today</span>
+          </div>
+        </div>
+
+        <!-- Electrocution -->
+        <div class="hazard-card">
+          <div class="hazard-header">
+            <div class="hazard-title">⚡ Electrocution</div>
+            <span class="chip medium">Medium Risk</span>
+          </div>
+          <div class="hazard-stats">
+            <div class="hazard-stat">
+              <div class="stat-value" style="color:var(--amber)">1</div>
+              <div class="stat-label">Events</div>
+            </div>
+            <div class="hazard-stat">
+              <div class="stat-value">8m</div>
+              <div class="stat-label">Exposure</div>
+            </div>
+          </div>
+          <div class="event-row" data-jarvis="At 3:20 PM, the worker was operating a power drill near exposed wiring. While no contact was made, I recommend caution in this zone until the electrician completes the panel installation.">
+            <span class="event-time">3:20 PM</span>
+            <span class="event-desc">Power drill near exposed wiring</span>
+          </div>
+          <div class="event-row" data-jarvis="At 1:10 PM, extension cord routing was recorded near standing water. I flagged this as a potential risk.">
+            <span class="event-time">1:10 PM</span>
+            <span class="event-desc">Extension cord near standing water</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ ERGONOMICS TAB ═══ -->
+    <div class="tab-content" id="tab-ergonomics">
+      <div class="ergo-layout">
+        <!-- Donut chart -->
+        <div class="donut-container">
+          <h3 class="section-title" style="margin-bottom:0">Posture Risk Distribution</h3>
+          <div class="donut-chart" style="background: conic-gradient(var(--green) 0deg 194deg, var(--amber) 194deg 284deg, var(--red) 284deg 360deg);">
+            <div class="donut-center">
+              <span class="donut-value">412</span>
+              <span class="donut-label">Minutes</span>
+            </div>
+          </div>
+          <div class="donut-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Low Risk <span class="legend-value">222 min (54%)</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--amber)"></div> Medium Risk <span class="legend-value">102 min (25%)</span></div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> High Risk <span class="legend-value">88 min (21%)</span></div>
+          </div>
+        </div>
+
+        <!-- Events + interventions -->
+        <div class="ergo-events">
+          <h3 class="section-title">Peak Posture Events</h3>
+          <div class="glass-card" style="padding:14px;">
+            <div class="event-row" data-jarvis="At 9:42 AM, sustained overhead reaching was detected for 8 minutes while installing header beams. This puts significant strain on the shoulders and neck.">
+              <span class="event-time">9:42 AM</span>
+              <span class="event-desc">Sustained overhead reaching — 8 min</span>
+              <span class="chip high">High</span>
+            </div>
+            <div class="event-row" data-jarvis="At 11:15 AM, deep knee bending was recorded for 12 minutes during floor-level framing work. Recommend using a kneeling pad or raising the work surface.">
+              <span class="event-time">11:15 AM</span>
+              <span class="event-desc">Deep knee bend — 12 min</span>
+              <span class="chip medium">Medium</span>
+            </div>
+            <div class="event-row" data-jarvis="At 1:55 PM, repetitive twisting of the torso was detected while passing materials. Consider repositioning the supply stack.">
+              <span class="event-time">1:55 PM</span>
+              <span class="event-desc">Repetitive torso twisting — 6 min</span>
+              <span class="chip high">High</span>
+            </div>
+            <div class="event-row" data-jarvis="At 3:05 PM, heavy lifting detected without mechanical assist. The load appeared to be above the 50-pound recommended limit.">
+              <span class="event-time">3:05 PM</span>
+              <span class="event-desc">Heavy lift — no mechanical assist</span>
+              <span class="chip high">High</span>
+            </div>
+            <div class="event-row" data-jarvis="At 10:30 AM, awkward wrist angle was detected during extended screw driving. Consider using a right-angle adapter.">
+              <span class="event-time">10:30 AM</span>
+              <span class="event-desc">Awkward wrist angle — screw driving</span>
+              <span class="chip medium">Medium</span>
+            </div>
+          </div>
+
+          <h3 class="section-title mt-lg">Recommended Interventions</h3>
+          <div class="intervention-chips">
+            <div class="intervention-chip">🔄 Rotate Task</div>
+            <div class="intervention-chip">📐 Lower Staging Height</div>
+            <div class="intervention-chip">🦵 Provide Kneeling Pad</div>
+            <div class="intervention-chip">🏗️ Use Mechanical Lift</div>
+            <div class="intervention-chip">🔧 Right-Angle Adapter</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PRODUCTIVITY TAB ═══ -->
+    <div class="tab-content" id="tab-productivity">
+      <div class="productivity-layout">
+        <!-- Stacked bar -->
+        <div class="stacked-bar-container">
+          <h3 class="section-title">Time Classification</h3>
+          <div class="stacked-bar">
+            <div class="bar-segment" style="width:52%; background:var(--blue);">52%</div>
+            <div class="bar-segment" style="width:28%; background:var(--purple);">28%</div>
+            <div class="bar-segment" style="width:20%; background:rgba(255,255,255,0.15);">20%</div>
+          </div>
+          <div class="bar-legend">
+            <div class="bar-legend-item"><div class="bar-legend-dot" style="background:var(--blue)"></div> Direct Work</div>
+            <div class="bar-legend-item"><div class="bar-legend-dot" style="background:var(--purple)"></div> Contributory</div>
+            <div class="bar-legend-item"><div class="bar-legend-dot" style="background:rgba(255,255,255,0.2)"></div> Non-Contributory</div>
+          </div>
+
+          <div class="flow-window mt-lg">
+            <h4>🔥 Best Flow Window</h4>
+            <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:8px;">9:00 AM – 11:30 AM &nbsp;·&nbsp; 2.5 hrs continuous direct work</p>
+            <div class="flow-bar">
+              <div class="flow-highlight" style="left:12%; width:30%;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.6rem; color:var(--text-dim); margin-top:4px; font-family:var(--font-mono);">
+              <span>7:00 AM</span><span>10:00</span><span>1:00 PM</span><span>4:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Blockers -->
+        <div>
+          <h3 class="section-title">Recurring Blockers</h3>
+          <div class="blocker-list">
+            <div class="blocker-item">
+              <span class="blocker-icon">📦</span>
+              <span class="blocker-text">Material delivery wait — staging area inaccessible</span>
+              <span class="blocker-time">33 min</span>
+            </div>
+            <div class="blocker-item">
+              <span class="blocker-icon">🔧</span>
+              <span class="blocker-text">Tool swap delay — drill battery charging</span>
+              <span class="blocker-time">11 min</span>
+            </div>
+            <div class="blocker-item">
+              <span class="blocker-icon">👷</span>
+              <span class="blocker-text">Crew coordination hold — waiting for crane signal</span>
+              <span class="blocker-time">8 min</span>
+            </div>
+            <div class="blocker-item">
+              <span class="blocker-icon">📋</span>
+              <span class="blocker-text">Blueprint clarification — supervisor consulted</span>
+              <span class="blocker-time">6 min</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ QUALITY TAB ═══ -->
+    <div class="tab-content" id="tab-quality">
+      <h3 class="section-title">Activity Checklists</h3>
+      <div class="quality-grid">
+        <div class="checklist-card">
+          <h4>🏗️ Wall Framing</h4>
+          <div class="check-item"><span class="check-icon">✅</span> Layout lines marked</div>
+          <div class="check-item"><span class="check-icon">✅</span> Bottom plate secured</div>
+          <div class="check-item"><span class="check-icon">✅</span> Studs spaced at 16" OC</div>
+          <div class="check-item"><span class="check-icon">✅</span> Top plate aligned</div>
+          <div class="check-item"><span class="check-icon">✅</span> Plumb check passed</div>
+          <div class="check-item"><span class="check-icon">⚠️</span> Bracing — partial (2 of 4)</div>
+        </div>
+        <div class="checklist-card">
+          <h4>🪟 Window Rough-Ins</h4>
+          <div class="check-item"><span class="check-icon">✅</span> Header installed</div>
+          <div class="check-item"><span class="check-icon">✅</span> King studs positioned</div>
+          <div class="check-item"><span class="check-icon">✅</span> Cripple studs cut</div>
+          <div class="check-item"><span class="check-icon">⚠️</span> Sill plate — not level (±3°)</div>
+        </div>
+        <div class="checklist-card">
+          <h4>🔌 Electrical Prep</h4>
+          <div class="check-item"><span class="check-icon">✅</span> Conduit runs mapped</div>
+          <div class="check-item"><span class="check-icon">✅</span> Box locations marked</div>
+          <div class="check-item"><span class="check-icon">✅</span> Wire pulled — section A</div>
+          <div class="check-item"><span class="check-icon">⚠️</span> Wire pulled — section B (incomplete)</div>
+        </div>
+        <div class="checklist-card">
+          <h4>🚪 Door Frames</h4>
+          <div class="check-item"><span class="check-icon">✅</span> Rough opening cut</div>
+          <div class="check-item"><span class="check-icon">✅</span> Header installed</div>
+          <div class="check-item"><span class="check-icon">✅</span> Shimmed and plumb</div>
+          <div class="check-item"><span class="check-icon">✅</span> Fasteners complete</div>
+        </div>
+      </div>
+
+      <h3 class="section-title mt-lg">Rework Signal Flags</h3>
+      <div class="rework-flags">
+        <div class="rework-item" data-jarvis="At 11:48 AM, the sill plate for the east window was measured at 3 degrees off level. This will need to be shimmed or re-cut before the window unit is installed.">
+          <span class="rework-time">11:48 AM</span>
+          <span>⚠️ Sill plate off-level — east window rough-in</span>
+        </div>
+        <div class="rework-item" data-jarvis="At 3:10 PM, bracing was only partially installed on the south wall. Two of four diagonal braces are missing. This needs to be completed before end of day.">
+          <span class="rework-time">3:10 PM</span>
+          <span>⚠️ Incomplete bracing — south wall</span>
+        </div>
+        <div class="rework-item" data-jarvis="Wire pulling for section B was stopped at 65% completion due to a routing conflict with the HVAC ductwork. The electrician will need to reroute.">
+          <span class="rework-time">2:30 PM</span>
+          <span>⚠️ Wire routing conflict — section B</span>
+        </div>
+      </div>
+
+      <h3 class="section-title mt-lg">Verification Moments</h3>
+      <div class="verification-moments">
+        <div class="verify-item" data-jarvis="At 10:05 AM, a plumb check was performed on the north wall framing. It passed within tolerance.">
+          <span class="verify-time">10:05 AM</span>
+          <span>📐 Plumb check — north wall framing (PASS)</span>
+        </div>
+        <div class="verify-item" data-jarvis="At 12:30 PM, stud spacing was verified on sections A through D. All measurements were within spec at 16 inches on center.">
+          <span class="verify-time">12:30 PM</span>
+          <span>📏 Stud spacing verification — sections A–D (PASS)</span>
+        </div>
+        <div class="verify-item" data-jarvis="At 3:42 PM, final inspection of completed framing was performed. All structural elements passed visual and measurement inspection.">
+          <span class="verify-time">3:42 PM</span>
+          <span>✅ Final framing inspection (PASS)</span>
+        </div>
+      </div>
+    </div>
+  </main>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>

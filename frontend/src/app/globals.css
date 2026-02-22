@@ -1,0 +1,354 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #080a0f;
+  --foreground: #c8d6e5;
+  --muted: #0d1520;
+  --muted-foreground: #6b7f99;
+  --border: rgba(56, 139, 255, 0.08);
+  --accent: #1e90ff;
+  --accent-dim: rgba(30, 144, 255, 0.15);
+  --card: rgba(10, 15, 25, 0.7);
+  --card-border: rgba(56, 139, 255, 0.06);
+  --ring: rgba(30, 144, 255, 0.3);
+  --cyan: #06b6d4;
+  --input: rgba(56, 139, 255, 0.08);
+  --primary: #1e90ff;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(30, 144, 255, 0.1);
+  --secondary-foreground: #c8d6e5;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --accent-foreground: #c8d6e5;
+  --popover: #0d1520;
+  --popover-foreground: #c8d6e5;
+  --radius: 0.75rem;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* Fonts loaded via next/font/google in layout.tsx */
+
+/* ===================== Scrollbar ===================== */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 139, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 139, 255, 0.25);
+}
+
+/* ===================== Grid Background ===================== */
+.bg-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(56, 139, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 139, 255, 0.025) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ===================== Scanline Overlay ===================== */
+.scanlines {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: repeating-linear-gradient(0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.03) 2px,
+      rgba(0, 0, 0, 0.03) 4px);
+}
+
+/* ===================== JARVIS Panel ===================== */
+.jarvis-panel {
+  background: linear-gradient(180deg, rgba(8, 10, 15, 0.95), rgba(13, 21, 32, 0.9));
+  border-right: 1px solid var(--card-border);
+}
+
+/* ===================== Orb Container ===================== */
+.orb-glow {
+  filter: drop-shadow(0 0 40px rgba(30, 144, 255, 0.15));
+}
+
+/* ===================== Waveform ===================== */
+.waveform {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 24px;
+}
+
+.waveform .bar {
+  width: 2px;
+  background: rgba(6, 182, 212, 0.3);
+  border-radius: 1px;
+  transition: height 0.15s ease;
+}
+
+.waveform.active .bar {
+  background: var(--cyan);
+  animation: wave 0.6s ease-in-out infinite alternate;
+}
+
+.waveform.listening .bar {
+  background: rgba(30, 144, 255, 0.6);
+  animation: wave 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes wave {
+  from {
+    height: 4px;
+  }
+
+  to {
+    height: var(--max-h, 16px);
+  }
+}
+
+/* ===================== Pulse Dot ===================== */
+.pulse-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: var(--cyan);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.pulse-dot.speaking {
+  background: #06b6d4;
+}
+
+.pulse-dot.listening {
+  background: #3b82f6;
+}
+
+.pulse-dot.standby {
+  background: #6b7f99;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ===================== Transcript ===================== */
+.transcript-bubble {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  animation: fadeIn 0.3s ease;
+}
+
+.transcript-bubble.jarvis {
+  background: rgba(6, 182, 212, 0.06);
+  border: 1px solid rgba(6, 182, 212, 0.1);
+  color: var(--foreground);
+}
+
+.transcript-bubble.user {
+  background: rgba(30, 144, 255, 0.06);
+  border: 1px solid rgba(30, 144, 255, 0.1);
+  color: var(--foreground);
+  margin-left: 12px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===================== Score Ring ===================== */
+.score-ring {
+  transform: rotate(-90deg);
+}
+
+.score-ring circle {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.score-ring .track {
+  stroke: rgba(56, 139, 255, 0.08);
+}
+
+.score-ring .fill {
+  stroke: var(--cyan);
+  stroke-dasharray: 226;
+  stroke-dashoffset: 226;
+  transition: stroke-dashoffset 1.5s ease;
+}
+
+/* ===================== Tab Underline ===================== */
+.tab-underline {
+  position: relative;
+}
+
+.tab-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: var(--cyan);
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.tab-underline.active::after {
+  opacity: 1;
+}
+
+/* ===================== Mic Button ===================== */
+.mic-btn {
+  background: rgba(6, 182, 212, 0.06);
+  border: 1px solid rgba(6, 182, 212, 0.15);
+  color: var(--foreground);
+  padding: 10px 24px;
+  border-radius: 999px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mic-btn:hover {
+  background: rgba(6, 182, 212, 0.12);
+  border-color: rgba(6, 182, 212, 0.25);
+}
+
+.mic-btn.active {
+  background: rgba(30, 144, 255, 0.15);
+  border-color: rgba(30, 144, 255, 0.4);
+}
+
+/* ===================== Upload Zone ===================== */
+.upload-zone {
+  border: 1.5px dashed rgba(56, 139, 255, 0.15);
+  border-radius: 16px;
+  padding: 40px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(10, 15, 25, 0.3);
+}
+
+.upload-zone:hover {
+  border-color: rgba(6, 182, 212, 0.3);
+  background: rgba(6, 182, 212, 0.03);
+}
+
+.upload-zone.dragover {
+  border-color: var(--cyan);
+  background: rgba(6, 182, 212, 0.06);
+}
+
+/* ===================== Progress Steps ===================== */
+.progress-step .step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(56, 139, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: var(--muted-foreground);
+  transition: all 0.3s ease;
+}
+
+.progress-step.active .step-dot {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
+}
+
+.progress-step.done .step-dot {
+  border-color: rgba(6, 182, 212, 0.4);
+  background: rgba(6, 182, 212, 0.1);
+  color: var(--cyan);
+}
+
+/* ===================== Clip Thumbnail ===================== */
+.clip-thumb {
+  background: rgba(10, 15, 25, 0.6);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clip-thumb:hover {
+  border-color: rgba(6, 182, 212, 0.2);
+  transform: translateY(-2px);
+}
+
+/* ===================== Glowing Effect Overrides ===================== */
+.glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+/* Override shadcn theme vars for dark mode */
+.dark {
+  --background: #080a0f;
+  --foreground: #c8d6e5;
+  --border: rgba(56, 139, 255, 0.08);
+}
