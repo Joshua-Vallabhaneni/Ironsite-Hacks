@@ -144,8 +144,11 @@ def run_pipeline(args):
         config.GEMINI_BUDGET_BASELINE = args.gemini_budget_baseline
 
     # Create output directory
-    run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = os.path.join(args.out_dir, f"{run_id}")
+    if getattr(args, "_output_dir_override", None):
+        output_dir = args._output_dir_override
+    else:
+        run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_dir = os.path.join(args.out_dir, f"{run_id}")
     os.makedirs(output_dir, exist_ok=True)
     log.info(f"Output directory: {output_dir}")
 

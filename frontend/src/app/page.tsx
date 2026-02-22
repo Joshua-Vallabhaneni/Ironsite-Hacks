@@ -12,104 +12,23 @@ import {
 } from "lucide-react";
 import { VideoUploadCard } from "@/components/ui/video-upload-card";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
-import { SAMPLE_REPORT } from "@/lib/sample-report";
 import { useJarvisAgent, type JarvisState, type TranscriptMsg } from "@/hooks/useJarvisAgent";
+import { parseReport } from "@/lib/parse-report";
+import type { ParsedReport, ClipEntry } from "@/lib/types";
+import {
+  uploadVideos,
+  startAnalysis,
+  getStatus,
+  getReport,
+  getSidecar,
+  getClipUrl,
+  type SidecarResponse,
+} from "@/lib/api";
 
 /* ============================================================
    TYPES
    ============================================================ */
 type Page = "upload" | "dashboard";
-
-interface HardcodedClip {
-  eventId: string;
-  timestamp: string;
-  type: string;
-  severity: string;
-  clipPath: string;
-  confidence: number;
-}
-
-interface HardcodedVideo {
-  tabLabel: string;
-  source: string;
-  duration: string;
-  resolution: string;
-  eventsDetected: number;
-  scores: { safety: number; ergonomics: number; productivity: number; quality: number };
-  clips: HardcodedClip[];
-}
-
-/* ============================================================
-   HARDCODED VIDEO DATA — all values from SAMPLE_REPORT
-   ============================================================ */
-const VIDEOS: HardcodedVideo[] = [
-  {
-    tabLabel: "02 Production Masonry",
-    source: "02_production_masonry.mp4",
-    duration: "00:21:16",
-    resolution: "640x480",
-    eventsDetected: 11,
-    scores: { safety: 35, ergonomics: 85, productivity: 50.9, quality: 75 },
-    clips: [
-      { eventId: "verification_moment_b89e43", timestamp: "00:04:00", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid2Data/vid2-verification.mp4", confidence: 0.70 },
-      { eventId: "ppe_violation_b01500", timestamp: "00:04:29", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid2Data/vid2-ppe.mp4", confidence: 0.75 },
-      { eventId: "rework_proxy_b4e63f", timestamp: "00:04:29", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid2Data/vid2Clips/rework_proxy_b4e63f.mp4", confidence: 0.85 },
-      { eventId: "rework_proxy_34fab6", timestamp: "00:04:31", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid2Data/vid2Clips/rework_proxy_34fab6.mp4", confidence: 0.85 },
-      { eventId: "task_transition_729d1a", timestamp: "00:04:33", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid2Data/vid2Clips/task_transition_729d1a.mp4", confidence: 0.85 },
-      { eventId: "ppe_violation_007241", timestamp: "00:05:30", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid2Data/vid2Clips/ppe_violation_007241.mp4", confidence: 0.80 },
-      { eventId: "rework_proxy_379d49", timestamp: "00:06:08", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid2Data/vid2Clips/rework_proxy_379d49.mp4", confidence: 0.70 },
-      { eventId: "approach_hazard_proxy_1c2b62", timestamp: "00:11:56", type: "Approach Hazard Proxy", severity: "med", clipPath: "/ConstructionData/vid2Data/vid2-approachhazard.mp4", confidence: 0.80 },
-      { eventId: "ppe_violation_fab518", timestamp: "00:18:40", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid2Data/vid2Clips/ppe_violation_fab518.mp4", confidence: 0.75 },
-      { eventId: "task_transition_75f57a", timestamp: "00:19:13", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid2Data/vid2Clips/task_transition_75f57a.mp4", confidence: 0.75 },
-      { eventId: "task_transition_c79480", timestamp: "00:20:44", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid2Data/vid2Clips/task_transition_c79480.mp4", confidence: 0.90 },
-    ],
-  },
-  {
-    tabLabel: "03 Production Masonry",
-    source: "03_production_masonry.mp4",
-    duration: "00:21:16",
-    resolution: "640x480",
-    eventsDetected: 33,
-    scores: { safety: 0, ergonomics: 80, productivity: 49.3, quality: 80 },
-    clips: [
-      { eventId: "verification_moment_ff5ed4", timestamp: "00:00:00", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/verification_moment_ff5ed4.mp4", confidence: 0.70 },
-      { eventId: "idle_streak_a602a2", timestamp: "00:00:35", type: "Idle Streak", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3-idle.mp4", confidence: 0.80 },
-      { eventId: "ppe_violation_42553b", timestamp: "00:00:58", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid3Data/vid3-ppe.mp4", confidence: 0.85 },
-      { eventId: "ppe_violation_c888cd", timestamp: "00:01:29", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid3Data/vid3clips/ppe_violation_c888cd.mp4", confidence: 0.80 },
-      { eventId: "idle_streak_ca30f2", timestamp: "00:01:38", type: "Idle Streak", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/idle_streak_ca30f2.mp4", confidence: 0.80 },
-      { eventId: "verification_moment_92ddd9", timestamp: "00:09:06", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/verification_moment_92ddd9.mp4", confidence: 0.70 },
-      { eventId: "ppe_violation_ba73f6", timestamp: "00:10:02", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid3Data/vid3clips/ppe_violation_ba73f6.mp4", confidence: 0.85 },
-      { eventId: "task_transition_b61394", timestamp: "00:10:07", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/task_transition_b61394.mp4", confidence: 0.85 },
-      { eventId: "task_transition_68ffb2", timestamp: "00:12:08", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/task_transition_68ffb2.mp4", confidence: 0.75 },
-      { eventId: "verification_moment_07ab17", timestamp: "00:15:38", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/verification_moment_07ab17.mp4", confidence: 0.70 },
-      { eventId: "verification_moment_314892", timestamp: "00:21:12", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/verification_moment_314892.mp4", confidence: 0.70 },
-    ],
-  },
-  {
-    tabLabel: "05 Production MP",
-    source: "05_production_mp.mp4",
-    duration: "00:20:12",
-    resolution: "820x616",
-    eventsDetected: 12,
-    scores: { safety: 80, ergonomics: 70, productivity: 52.1, quality: 45 },
-    clips: [
-      { eventId: "rework_proxy_a60089", timestamp: "00:01:31", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-rework.mp4", confidence: 0.90 },
-      { eventId: "task_transition_c14298", timestamp: "00:05:30", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-task-trans.mp4", confidence: 0.80 },
-      { eventId: "rework_proxy_567d85", timestamp: "00:06:42", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_567d85.mp4", confidence: 0.90 },
-      { eventId: "rework_proxy_c0407f", timestamp: "00:06:43", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_c0407f.mp4", confidence: 0.90 },
-      { eventId: "rework_proxy_b150f8", timestamp: "00:06:48", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_b150f8.mp4", confidence: 0.85 },
-      { eventId: "rework_proxy_141975", timestamp: "00:07:42", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_141975.mp4", confidence: 0.80 },
-      { eventId: "rework_proxy_001777", timestamp: "00:12:15", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_001777.mp4", confidence: 0.93 },
-      { eventId: "task_transition_befcd7", timestamp: "00:14:00", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-clips/task_transition_befcd7.mp4", confidence: 0.75 },
-      { eventId: "task_transition_2c812c", timestamp: "00:15:00", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-clips/task_transition_2c812c.mp4", confidence: 0.93 },
-      { eventId: "task_transition_21dff7", timestamp: "00:16:30", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-clips/task_transition_21dff7.mp4", confidence: 0.95 },
-      { eventId: "ppe_violation_700e6b", timestamp: "00:19:58", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid5Data/vid5-clips/ppe_violation_700e6b.mp4", confidence: 0.75 },
-      { eventId: "verification_moment_e6aa6f", timestamp: "00:20:00", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-verify.mp4", confidence: 0.75 },
-    ],
-  },
-];
-
-const REPORT_DATE = "2026-02-22";
 
 /* ============================================================
    UTILITY
@@ -160,7 +79,7 @@ function Skeleton({ className = "" }: { className?: string }) {
 /* ============================================================
    COMPONENT: LightboxModal
    ============================================================ */
-function LightboxModal({ clip, onClose }: { clip: HardcodedClip; onClose: () => void }) {
+function LightboxModal({ clip, onClose }: { clip: ClipEntry; onClose: () => void }) {
   return (
     <div className="lightbox-overlay" onClick={onClose}>
       <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
@@ -236,8 +155,8 @@ function LazyVideo({ src, delay = 0 }: { src: string; delay?: number }) {
 /* ============================================================
    COMPONENT: MustWatchClips
    ============================================================ */
-function MustWatchClips({ clips }: { clips: HardcodedClip[] }) {
-  const [lightboxClip, setLightboxClip] = useState<HardcodedClip | null>(null);
+function MustWatchClips({ clips }: { clips: ClipEntry[] }) {
+  const [lightboxClip, setLightboxClip] = useState<ClipEntry | null>(null);
 
   if (clips.length === 0) {
     return (
@@ -292,10 +211,10 @@ function MustWatchClips({ clips }: { clips: HardcodedClip[] }) {
 /* ============================================================
    PDF Download
    ============================================================ */
-function downloadReportPDF(_video: HardcodedVideo) {
+function downloadReportPDF(runId: string, date: string) {
   const a = document.createElement("a");
-  a.href = "/combined_daily_site_report_2026-02-22_structured_plain.pdf";
-  a.download = "combined_daily_site_report_2026-02-22.pdf";
+  a.href = `/api/report-pdf/${runId}`;
+  a.download = `site_report_${date}.pdf`;
   a.click();
 }
 
@@ -310,6 +229,13 @@ export default function Home() {
   const [processing, setProcessing] = useState(false);
   const [processStep, setProcessStep] = useState(-1);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
+
+  // Real API state
+  const [runId, setRunId] = useState<string | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [parsedReport, setParsedReport] = useState<ParsedReport | null>(null);
+  const [sidecar, setSidecar] = useState<SidecarResponse | null>(null);
+  const [reportDate, setReportDate] = useState("");
 
   // ElevenLabs voice agent hook
   const {
@@ -333,17 +259,19 @@ export default function Home() {
 
   /* ---------- Screen Context Builder ---------- */
   const buildScreenContext = useCallback((videoIndex: number): string => {
-    const video = VIDEOS[videoIndex];
+    if (!parsedReport) return "SCREEN_CONTEXT: No report loaded";
+    const video = parsedReport.videos[videoIndex];
+    if (!video) return "SCREEN_CONTEXT: No video data";
     return [
       `SCREEN_CONTEXT:`,
-      `Report: ${REPORT_DATE}, Video: ${video.source}, Duration: ${video.duration}`,
-      `Worker: Marcus Rivera, Site: #4`,
+      `Report: ${reportDate}, Video: ${video.filename}, Duration: ${video.duration}`,
+      `Worker: Tony Stark, Site: #4`,
       `Scoreboard: Safety ${video.scores.safety}/100, Ergonomics ${video.scores.ergonomics}/100, Productivity ${video.scores.productivity}/100, Quality ${video.scores.quality}/100`,
       `Events Detected: ${video.eventsDetected}`,
       `Clips on screen:`,
       ...video.clips.map(c => `  - ${c.timestamp} | ${c.type} (${c.severity} severity) - Confidence: ${(c.confidence * 100).toFixed(0)}%`)
     ].join("\n");
-  }, []);
+  }, [parsedReport, reportDate]);
 
   /* ---------- Send context on dashboard entry or video change ---------- */
   useEffect(() => {
@@ -354,30 +282,93 @@ export default function Home() {
   }, [page, agentStatus, selectedVideoIndex, buildScreenContext, sendContextualUpdate]);
 
 
-  /* ---------- Processing Simulation ---------- */
-  const startProcessing = useCallback(() => {
+  /* ---------- Real Processing via API ---------- */
+  const startProcessing = useCallback(async () => {
+    if (uploadedFiles.length === 0) return;
     setProcessing(true);
+    setProcessStep(0);
+    addMsg("Uploading footage...", "jarvis");
 
-    const steps = [
-      { msg: "Uploading footage... complete.", delay: 1200 },
-      { msg: "Running spatial depth analysis...", delay: 2000 },
-      { msg: "Tracking hand and tool interactions...", delay: 2500 },
-      { msg: "Generating your performance report...", delay: 2000 },
-    ];
+    try {
+      // 1. Upload
+      const rid = await uploadVideos(uploadedFiles);
+      setRunId(rid);
+      setProcessStep(1);
+      addMsg("Upload complete. Starting analysis...", "jarvis");
 
-    let cumulative = 0;
-    steps.forEach((s, i) => {
-      cumulative += s.delay;
-      setTimeout(() => {
-        setProcessStep(i);
-        addMsg(s.msg, "jarvis");
-      }, cumulative);
-    });
+      // 2. Trigger analysis
+      await startAnalysis(rid);
+      setProcessStep(1);
+      addMsg("Running spatial depth analysis...", "jarvis");
 
-    cumulative += 2000;
-    setTimeout(() => {
+      // 3. Poll status
+      const poll = () => new Promise<void>((resolve, reject) => {
+        const interval = setInterval(async () => {
+          try {
+            const status = await getStatus(rid);
+            // Map pipeline step to progress step index
+            const stepMap: Record<string, number> = {
+              "Starting pipeline": 1,
+              "Scene selection": 1,
+              "Sidecar construction": 1,
+              "Activity labeling": 2,
+              "Event extraction": 2,
+              "Spatial query": 2,
+              "Metrics computation": 2,
+              "Report generation": 3,
+              "Done": 4,
+            };
+            const stepIdx = stepMap[status.step] ?? processStep;
+            setProcessStep(stepIdx);
+
+            if (status.step === "Event extraction" || status.step === "Spatial query") {
+              addMsg("Tracking hand and tool interactions...", "jarvis");
+            } else if (status.step === "Report generation") {
+              addMsg("Generating your performance report...", "jarvis");
+            }
+
+            if (status.status === "complete") {
+              clearInterval(interval);
+              resolve();
+            } else if (status.status === "error") {
+              clearInterval(interval);
+              reject(new Error(status.error ?? "Pipeline error"));
+            }
+          } catch (err) {
+            clearInterval(interval);
+            reject(err);
+          }
+        }, 3000);
+      });
+
+      await poll();
+
+      // 4. Fetch results
       setProcessStep(4);
+      addMsg("Analysis complete. Loading results...", "jarvis");
+
+      const [reportMd, sidecarData] = await Promise.all([
+        getReport(rid),
+        getSidecar(rid),
+      ]);
+
+      const parsed = parseReport(reportMd);
+      setReportDate(parsed.date);
+
+      // Rewrite clip paths to use API URLs
+      for (const video of parsed.videos) {
+        for (const clip of video.clips) {
+          if (clip.clipPath && !clip.clipPath.startsWith("/api/")) {
+            clip.clipPath = getClipUrl(rid, clip.clipPath);
+          }
+        }
+      }
+
+      setParsedReport(parsed);
+      setSidecar(sidecarData);
+
       addMsg("Analysis complete. Transitioning to your dashboard...", "jarvis");
+
       setTimeout(() => {
         setPage("dashboard");
         setProcessing(false);
@@ -391,18 +382,23 @@ export default function Home() {
           },
         ]);
       }, 1200);
-    }, cumulative);
-  }, [addMsg, setTranscripts]);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown error";
+      addMsg(`Error: ${msg}`, "jarvis");
+      setProcessing(false);
+      setProcessStep(-1);
+    }
+  }, [uploadedFiles, addMsg, setTranscripts]);
 
   const switchVideo = (index: number) => {
     setSelectedVideoIndex(index);
-    if (agentStatus !== "connected") {
-      addMsg(`Switching to ${VIDEOS[index].tabLabel}. Loading report data...`, "jarvis");
+    if (agentStatus !== "connected" && parsedReport) {
+      addMsg(`Switching to ${parsedReport.videos[index]?.label ?? "video"}. Loading report data...`, "jarvis");
     }
   };
 
-  const currentVideo = VIDEOS[selectedVideoIndex];
-  const scores = currentVideo.scores;
+  const currentVideo = parsedReport?.videos[selectedVideoIndex];
+  const scores = currentVideo?.scores;
 
   /* ---------- JARVIS Panel ---------- */
   const JarvisPanel = () => (
@@ -460,7 +456,7 @@ export default function Home() {
         )}
 
         <div className="mt-auto pt-6 text-center">
-          <p className="text-[0.65rem] text-[#6b7f99]">{REPORT_DATE}</p>
+          <p className="text-[0.65rem] text-[#6b7f99]">{reportDate || ""}</p>
         </div>
       </div>
     </div>
@@ -537,12 +533,22 @@ export default function Home() {
           </div>
 
           {!processing ? (
-            <VideoUploadCard
-              title="Upload Headcam Footage"
-              description="Drop your video files here to begin AI-powered site analysis."
-              className="w-full"
-              onFileSelected={() => startProcessing()}
-            />
+            <div className="w-full flex flex-col items-center gap-4">
+              <VideoUploadCard
+                title="Upload Headcam Footage"
+                description="Drop your video files here to begin AI-powered site analysis."
+                className="w-full"
+                onFilesSelected={(files) => setUploadedFiles(files)}
+              />
+              {uploadedFiles.length > 0 && (
+                <button
+                  className="mic-btn"
+                  onClick={() => startProcessing()}
+                >
+                  Analyze {uploadedFiles.length} video{uploadedFiles.length > 1 ? "s" : ""}
+                </button>
+              )}
+            </div>
           ) : (
             <div className="w-full max-w-xl">
               <p className="text-sm text-[#c8d6e5] text-center mb-8">
@@ -583,6 +589,15 @@ export default function Home() {
     );
   }
 
+  /* ---------- DASHBOARD PAGE ---------- */
+  if (!parsedReport || !currentVideo || !scores) {
+    return (
+      <main className="h-screen flex items-center justify-center">
+        <p className="text-[#6b7f99]">Loading report data...</p>
+      </main>
+    );
+  }
+
   return (
     <main className="h-screen flex relative overflow-hidden">
       <div className="bg-grid" /><div className="scanlines" />
@@ -593,20 +608,20 @@ export default function Home() {
           {/* Video Selector Tab Bar — with Download Reports button */}
           <div className="video-tab-bar" style={{ justifyContent: "space-between" }}>
             <div className="flex">
-              {VIDEOS.map((v, i) => (
+              {parsedReport.videos.map((v, i) => (
                 <button
                   key={i}
                   className={`video-tab-item ${selectedVideoIndex === i ? "active" : ""}`}
                   onClick={() => switchVideo(i)}
                 >
-                  <span>{v.tabLabel}</span>
+                  <span>{v.label}</span>
                   <span className="video-tab-duration">{v.duration}</span>
                   {selectedVideoIndex === i && <div className="video-tab-underline" />}
                 </button>
               ))}
             </div>
             <div className="flex items-center pr-2 pb-1">
-              <button className="ghost-btn" onClick={() => downloadReportPDF(currentVideo)}>
+              <button className="ghost-btn" onClick={() => downloadReportPDF(runId ?? "", reportDate)}>
                 <Download className="h-3.5 w-3.5" /> Download Report
               </button>
             </div>

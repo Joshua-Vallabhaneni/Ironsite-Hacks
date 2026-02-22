@@ -35,6 +35,7 @@ export interface ClipEntry {
   type: string;
   severity: string;
   clipPath: string;
+  confidence: number;
 }
 
 export interface EvidenceEntry {

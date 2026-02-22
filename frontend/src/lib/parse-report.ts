@@ -50,6 +50,12 @@ export function parseReport(markdown: string): ParsedReport {
   const framesAnalyzed = parseFramesAnalyzed(markdown);
   const evidenceIndex = parseEvidenceIndex(markdown);
 
+  // Merge confidence from evidence index into clips
+  const confidenceMap = new Map(evidenceIndex.map((e) => [e.eventId, e.confidence]));
+  for (const clip of clips) {
+    clip.confidence = confidenceMap.get(clip.eventId) ?? 0;
+  }
+
   // Build VideoReport for each video
   const videos: VideoReport[] = filenames.map((filename) => {
     const breakdown = videoBreakdowns.find((v) => v.filename === filename);
@@ -165,6 +171,7 @@ function parseClips(md: string): ClipEntry[] {
       type: m[3],
       severity: m[4],
       clipPath: m[5] ?? "",
+      confidence: 0,
     });
   }
   return clips;
