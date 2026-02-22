@@ -177,10 +177,41 @@ def save_crop(frame: np.ndarray, bbox_norm: List[float], output_path: str,
     return output_path
 
 
+def _draw_region_overlay(frame: np.ndarray, region: int) -> np.ndarray:
+    """
+    Draw a 3×3 grid overlay on a frame, highlighting the given region cell
+    with a semi-transparent orange fill and solid border.
+    Grid lines are drawn faintly so the manager can see all nine zones.
+    """
+    h, w = frame.shape[:2]
+    cell_w, cell_h = w // 3, h // 3
+    col, row = region % 3, region // 3
+    x0, y0 = col * cell_w, row * cell_h
+    x1, y1 = x0 + cell_w, y0 + cell_h
+
+    # Semi-transparent orange fill on the active region
+    overlay = frame.copy()
+    cv2.rectangle(overlay, (x0, y0), (x1, y1), (0, 140, 255), cv2.FILLED)
+    frame = cv2.addWeighted(overlay, 0.35, frame, 0.65, 0)
+
+    # Solid orange border on the active region
+    cv2.rectangle(frame, (x0, y0), (x1, y1), (0, 140, 255), 3)
+
+    # Faint white grid lines for context
+    for i in range(1, 3):
+        cv2.line(frame, (i * cell_w, 0), (i * cell_w, h), (200, 200, 200), 1)
+        cv2.line(frame, (0, i * cell_h), (w, i * cell_h), (200, 200, 200), 1)
+
+    return frame
+
+
 def cut_clip(video_path: str, center_sec: float, output_path: str,
-             window_sec: float = None) -> Optional[str]:
+             window_sec: float = None,
+             overlay_region: Optional[int] = None) -> Optional[str]:
     """
     Cut a short clip from video centered on center_sec, ±window_sec.
+    If overlay_region is set (0-8), draws a 3×3 grid with that cell highlighted
+    on every frame so the manager can see which area of the frame is relevant.
     Returns output path or None on failure.
     """
     if window_sec is None:
@@ -218,6 +249,8 @@ def cut_clip(video_path: str, center_sec: float, output_path: str,
             current_sec = cap.get(cv2.CAP_PROP_POS_MSEC) / 1000.0
             if current_sec > end_sec:
                 break
+            if overlay_region is not None:
+                frame = _draw_region_overlay(frame, overlay_region)
             writer.write(frame)
             frames_written += 1
 

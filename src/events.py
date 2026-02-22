@@ -65,10 +65,13 @@ def extract_events(
         if event.get("video_file") and video_paths.get(event["video_file"]):
             center_sec = (event["start_time_sec"] + event["end_time_sec"]) / 2.0
             clip_path = os.path.join(clips_dir, f"{event['event_id']}.mp4")
+            # Pass spatial_region so clips get a grid overlay showing the active zone
+            overlay_region = event.get("contributing_signals", {}).get("spatial_region")
             result = video_io.cut_clip(
                 video_paths[event["video_file"]],
                 center_sec,
                 clip_path,
+                overlay_region=overlay_region,
             )
             if result:
                 event["evidence"]["clip_path"] = os.path.relpath(clip_path, output_dir)
