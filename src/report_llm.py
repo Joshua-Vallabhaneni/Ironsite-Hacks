@@ -12,13 +12,18 @@ from .spatial_query import GeminiBudgetTracker
 
 log = logging.getLogger(__name__)
 
-# Citation-enforcement system prompt (verbatim from spec)
 SYSTEM_PROMPT = (
-    "You are a construction site supervisor report writer. "
-    "You may ONLY make claims about events present in the provided JSON sidecar. "
-    "For every claim you make, you MUST include a citation in the format [EVENT_ID @ HH:MM:SS]. "
-    "Do not infer, speculate, or add any observations not present in the sidecar. "
-    "If you cannot support a claim with a cited event, omit it entirely."
+    "You are a senior construction site supervisor writing a detailed daily briefing "
+    "for a project manager. This report will also be read aloud by a voice AI assistant "
+    "to brief the manager verbally. "
+    "Write in clear, professional English using full sentences and paragraphs — "
+    "not raw data dumps. Describe what was actually happening on site: explain each "
+    "scenario in plain language, what the worker was doing, what the observation means "
+    "in a real construction context, and what action the manager should take. "
+    "For every specific event you reference, cite it as [EVENT_ID @ HH:MM:SS]. "
+    "Only reference events explicitly present in the provided data. "
+    "When data is limited, explain what the available signals suggest rather than refusing to comment. "
+    "Use language a non-technical project manager can understand and act on immediately."
 )
 
 
@@ -100,15 +105,25 @@ def generate_headlines(
     events_json = json.dumps(top_events, indent=2, default=str)
 
     prompt = (
-        f"Based on the following construction site events and metrics, "
-        f"write 3-6 concise headline bullet points for a daily site report front page. "
-        f"Each headline MUST cite an event in [EVENT_ID @ HH:MM:SS] format.\n\n"
-        f"Events:\n{events_json}\n\n"
-        f"Metrics: Safety={metrics.get('safety', {}).get('score', 'N/A')}/100, "
-        f"Ergonomics={metrics.get('ergonomics', {}).get('score', 'N/A')}/100, "
-        f"Productivity={metrics.get('productivity', {}).get('score', 'N/A')}/100, "
-        f"Quality={metrics.get('quality', {}).get('score', 'N/A')}/100\n\n"
-        f"Format as markdown bullet points. Be specific and evidence-backed."
+        f"Write 4-6 headline bullet points for the front page of a construction site daily report. "
+        f"This will be read by a project manager and spoken aloud by a voice assistant. "
+        f"Each headline must be a complete, informative sentence that tells a story — "
+        f"not just 'event detected' but what it means for the project and what to do about it.\n\n"
+        f"Event type context for writing headlines:\n"
+        f"  ppe_violation = worker observed without protective gloves during active masonry work\n"
+        f"  rework_proxy = worker returned to same area after 60+ seconds away (possible rework or adjustment)\n"
+        f"  sustained_work = worker maintained focused productive activity for 60+ seconds continuously\n"
+        f"  near_miss_proxy = worker using a tool in a high-risk posture (crouching/reaching overhead)\n"
+        f"  idle_streak = worker was stationary and inactive (rest, wait, or disruption)\n"
+        f"  task_transition = worker shifted between different types of work activity\n"
+        f"  verification_moment = worker paused to inspect, measure, or check their work\n\n"
+        f"Top events:\n{events_json}\n\n"
+        f"Scores — Safety: {metrics.get('safety', {}).get('score', 'N/A')}/100, "
+        f"Ergonomics: {metrics.get('ergonomics', {}).get('score', 'N/A')}/100, "
+        f"Productivity: {metrics.get('productivity', {}).get('score', 'N/A')}/100, "
+        f"Quality: {metrics.get('quality', {}).get('score', 'N/A')}/100\n\n"
+        f"Format as markdown bullet points. Each bullet must be a full sentence. "
+        f"Cite relevant events as [EVENT_ID @ HH:MM:SS]. Lead with the most important finding."
     )
 
     try:
@@ -268,38 +283,89 @@ def _filter_events_for_section(section_name: str, events: List[dict]) -> List[di
 
 def _build_section_prompt(section_name: str, events_json: str, metrics: dict) -> str:
     """Build the prompt for a specific report section."""
+
+    EVENT_GLOSSARY = (
+        "Event type definitions — use these to write detailed scenario descriptions:\n"
+        "  ppe_violation: worker observed without protective gloves during active masonry hand work\n"
+        "  near_miss_proxy: worker using a tool while crouching or reaching overhead — elevated injury risk\n"
+        "  occlusion_critical: sustained visual obstruction during high-intensity work; worker in confined area\n"
+        "  approach_hazard_proxy: camera moving toward a depth discontinuity — worker near a ledge or edge\n"
+        "  rework_proxy: worker returned to same area after 60+ second gap — possible adjustment or redo\n"
+        "  idle_streak: worker stationary with low activity — rest, material wait, or disruption\n"
+        "  task_transition: worker shifted work category (e.g. brick laying → repositioning)\n"
+        "  sustained_work: worker maintained focused productive activity for 60+ consecutive seconds\n"
+        "  verification_moment: worker paused to measure, inspect, or check alignment — positive quality signal\n"
+    )
+
     section_prompts = {
         "safety": (
-            f"Write the SAFETY DESK section of a construction daily report. "
-            f"First, report any ppe_violation events under a 'PPE Compliance' heading. "
-            f"Then organize remaining findings under: Falls, Struck-By, Caught-In/Between, Electrical. "
-            f"For each subsection: report exposure minutes, event count, and top 3 events. "
-            f"Each event citation must be in format [EVENT_ID @ HH:MM:SS].\n\n"
+            f"Write the SAFETY BRIEFING section of a construction site daily report for a project manager.\n\n"
+            f"{EVENT_GLOSSARY}\n"
             f"Safety Score: {metrics.get('safety', {}).get('score', 'N/A')}/100\n\n"
-            f"Events:\n{events_json}"
+            f"Events:\n{events_json}\n\n"
+            f"Write 3-5 paragraphs. Open with a 1-2 sentence summary of today's safety picture. "
+            f"Then cover PPE compliance (describe glove violations as scenarios — what was the worker doing, "
+            f"how long, what is the risk), tool handling risks (near_miss_proxy — describe posture and activity), "
+            f"and fall/obstruction risk (approach_hazard, occlusion_critical). "
+            f"For each event, explain the scenario in plain English and cite as [EVENT_ID @ HH:MM:SS]. "
+            f"Close with 2-3 concrete recommended actions for the manager to take before tomorrow's shift. "
+            f"Write in full sentences. This will be spoken aloud to the manager."
         ),
         "ergonomics": (
-            f"Write the ERGONOMICS section of a construction daily report. "
-            f"Include high-risk minutes, peak strain events with timestamps, "
-            f"and recommended interventions. Cite events as [EVENT_ID @ HH:MM:SS].\n\n"
-            f"Ergonomics Score: {metrics.get('ergonomics', {}).get('score', 'N/A')}/100\n\n"
-            f"Events:\n{events_json}"
+            f"Write the ERGONOMICS & WORKER WELFARE section of a construction site daily report.\n\n"
+            f"{EVENT_GLOSSARY}\n"
+            f"Ergonomics Score: {metrics.get('ergonomics', {}).get('score', 'N/A')}/100\n"
+            f"High-motion work segments detected: {metrics.get('ergonomics', {}).get('high_motion_segments', 0)}\n\n"
+            f"Events:\n{events_json}\n\n"
+            f"Write 3-4 paragraphs. Open with a 1-2 sentence summary of today's physical strain level. "
+            f"For rework_proxy events, describe each as a repetitive motion scenario — "
+            f"the worker returned to the same physical area and repeated the same movements, "
+            f"stressing the same muscle groups. Include the time gap between return visits. "
+            f"For near_miss_proxy events, describe them as posture stress events — "
+            f"prolonged crouching or overhead reaching with tools is hard on joints over a full shift. "
+            f"Note if events cluster early or late (fatigue pattern). "
+            f"Cite each event as [EVENT_ID @ HH:MM:SS]. "
+            f"Close with specific recommended interventions: task rotation schedule, micro-break timing, "
+            f"posture coaching focus areas. Write in full sentences."
         ),
         "productivity": (
-            f"Write the PRODUCTIVITY & FLOW section. Include Direct/Contributory/"
-            f"Noncontributory breakdown in minutes and percentages. "
-            f"List biggest blockers with timestamps. "
-            f"Identify the best continuous-flow window.\n\n"
-            f"Productivity details: {json.dumps(metrics.get('productivity', {}), default=str)}\n\n"
-            f"Events:\n{events_json}"
+            f"Write the PRODUCTIVITY & FLOW section of a construction site daily report.\n\n"
+            f"{EVENT_GLOSSARY}\n"
+            f"Productivity Score: {metrics.get('productivity', {}).get('score', 'N/A')}/100\n\n"
+            f"Productivity breakdown (from keyframe analysis — no individual event IDs needed for these figures):\n"
+            f"{json.dumps(metrics.get('productivity', {}), indent=2, default=str)}\n\n"
+            f"Events:\n{events_json}\n\n"
+            f"Write 3-5 paragraphs. Open with 1-2 sentences: was this a productive shift? "
+            f"Report the Direct/Contributory/Noncontributory time split in plain English "
+            f"(e.g. 'The worker spent approximately X minutes in direct productive masonry work'). "
+            f"For sustained_work events, describe them as the productive highlights of the shift — "
+            f"when was the worker most focused, what were they doing, how long did it last. "
+            f"Cite each as [EVENT_ID @ HH:MM:SS]. "
+            f"For idle_streak events, describe each gap — duration, timing, likely cause. "
+            f"Cite as [EVENT_ID @ HH:MM:SS]. "
+            f"For task_transition events, describe what changed and when. "
+            f"Close with a practical recommendation for improving output tomorrow. "
+            f"Write in full sentences. This will be spoken aloud to the manager."
         ),
         "quality": (
-            f"Write the QUALITY & PROGRESS section. "
-            f"List sustained_work periods (these show productive focused work), "
-            f"verification moments, and rework signals with timestamps. "
-            f"Cite events as [EVENT_ID @ HH:MM:SS].\n\n"
+            f"Write the QUALITY & PROGRESS section of a construction site daily report.\n\n"
+            f"{EVENT_GLOSSARY}\n"
             f"Quality Score: {metrics.get('quality', {}).get('score', 'N/A')}/100\n\n"
-            f"Events:\n{events_json}"
+            f"Events:\n{events_json}\n\n"
+            f"Write 3-4 paragraphs. Open with 1-2 sentences summarising the quality picture. "
+            f"For sustained_work events, frame these as evidence of focused quality output — "
+            f"uninterrupted work produces more consistent results; describe the activity and duration. "
+            f"Cite each as [EVENT_ID @ HH:MM:SS]. "
+            f"For verification_moment events, describe these positively — "
+            f"the worker deliberately paused to check, measure, or inspect their work. "
+            f"Cite each as [EVENT_ID @ HH:MM:SS]. "
+            f"For rework_proxy events, flag these as quality concerns — "
+            f"describe the scenario (worker returned to an area they had already worked, "
+            f"which may mean a brick needed repositioning or mortar needed correction) "
+            f"and what a supervisor should physically check at that section of wall. "
+            f"Cite each as [EVENT_ID @ HH:MM:SS]. "
+            f"Close with an overall quality verdict and what to inspect in the next session. "
+            f"Write in full sentences."
         ),
     }
 
