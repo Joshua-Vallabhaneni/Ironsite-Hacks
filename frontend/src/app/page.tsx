@@ -188,7 +188,7 @@ function MustWatchClips({ clips }: { clips: HardcodedClip[] }) {
       <h3 className="text-[18px] font-semibold text-[#E5E5E5]">Must-Watch Clips</h3>
 
       {/* Uniform grid — all clips same size */}
-      <div className={`grid gap-4 ${clips.length <= 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+      <div className={`grid gap-8 ${clips.length <= 2 ? "grid-cols-2" : "grid-cols-3"}`}>
         {clips.map((clip, i) => (
           <div
             key={i}
@@ -209,9 +209,6 @@ function MustWatchClips({ clips }: { clips: HardcodedClip[] }) {
             />
             <div className="clip-gradient" />
 
-            <div className="absolute top-3 left-3 z-10">
-              <span className={`text-[10px] font-bold text-white px-2 py-0.5 rounded-md ${getSeverityBg(clip.severity)}`}>{clip.severity}</span>
-            </div>
 
             <div className="absolute bottom-3 left-3 right-3 z-10">
               <p className="text-[14px] font-semibold text-white leading-snug">{clip.type}</p>
@@ -237,42 +234,11 @@ function MustWatchClips({ clips }: { clips: HardcodedClip[] }) {
 /* ============================================================
    PDF Download
    ============================================================ */
-function downloadReportPDF(video: HardcodedVideo) {
-  const printWindow = window.open("", "_blank");
-  if (!printWindow) return;
-
-  const pdfName = video.source.replace(/\.mp4$/i, "") + "_report";
-  const escaped = SAMPLE_REPORT
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-
-  printWindow.document.write(`<!DOCTYPE html>
-<html>
-<head>
-  <title>${pdfName}</title>
-  <style>
-    body {
-      font-family: 'Courier New', monospace;
-      font-size: 11px;
-      line-height: 1.7;
-      color: #111;
-      max-width: 820px;
-      margin: 40px auto;
-      padding: 0 24px;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
-    @media print {
-      body { margin: 0; padding: 16px; }
-      @page { size: A4; margin: 18mm 14mm; }
-    }
-  </style>
-</head>
-<body>${escaped}</body>
-</html>`);
-  printWindow.document.close();
-  setTimeout(() => printWindow.print(), 400);
+function downloadReportPDF(_video: HardcodedVideo) {
+  const a = document.createElement("a");
+  a.href = "/combined_daily_site_report_2026-02-22_structured_plain.pdf";
+  a.download = "combined_daily_site_report_2026-02-22.pdf";
+  a.click();
 }
 
 /* ============================================================
@@ -331,37 +297,44 @@ export default function Home() {
   /* ---------- JARVIS Panel (shared, UNTOUCHED) ---------- */
   const JarvisPanel = () => (
     <div className="jarvis-panel w-full md:w-72 lg:w-80 flex flex-col items-center py-8 px-6 h-full relative z-10">
-      <h1 className="text-lg font-bold tracking-widest text-[#06b6d4] uppercase">JARVIS</h1>
-      <p className="text-[0.6rem] text-[#6b7f99] tracking-[0.25em] uppercase mt-0.5">Intelligent Jobsite Oversight</p>
-      <div className="orb-glow w-44 h-44 my-6">
-        <VoicePoweredOrb enableVoiceControl={false} hue={0} className="w-full h-full" />
+      {/* MIDDLE: title + orb + waveform + transcript — grows to fill available space */}
+      <div className="flex-1 flex flex-col items-center w-full min-h-0">
+        <h1 className="text-lg font-bold tracking-widest text-[#06b6d4] uppercase">JARVIS</h1>
+        <p className="text-[0.6rem] text-[#6b7f99] tracking-[0.25em] uppercase mt-0.5 mb-2">Intelligent Jobsite Oversight</p>
+        <div className="orb-glow w-44 h-44 my-6 p-5 flex-shrink-0">
+          <VoicePoweredOrb enableVoiceControl={false} hue={0} className="w-full h-full" />
+        </div>
+        <div className={`waveform flex-shrink-0 ${jarvisState === "speaking" ? "active" : jarvisState === "listening" ? "listening" : ""}`}>
+          {Array.from({ length: 40 }).map((_, i) => {
+            const seed1 = ((i * 7 + 3) % 13) / 13;
+            const seed2 = ((i * 11 + 5) % 17) / 17;
+            const seed3 = ((i * 13 + 7) % 19) / 19;
+            return <div key={i} className="bar" style={{ height: `${4 + seed1 * 12}px`, animationDelay: `${seed2 * 0.5}s`, ["--max-h" as string]: `${8 + seed3 * 14}px` }} />;
+          })}
+        </div>
+        <div className="mt-3 flex-shrink-0 text-[0.65rem] tracking-[0.2em] uppercase text-[#6b7f99] flex items-center gap-1">
+          <span className={`pulse-dot ${jarvisState === "speaking" ? "speaking" : jarvisState === "listening" ? "listening" : "standby"}`} />
+          {jarvisState === "speaking" ? "JARVIS IS SPEAKING..." : jarvisState === "listening" ? "LISTENING..." : "STANDBY"}
+        </div>
+        <div className="w-full mt-4 flex-1 min-h-0 overflow-y-auto space-y-2">
+          {transcripts.map((msg) => <div key={msg.id} className={`transcript-bubble ${msg.sender}`}>{msg.text}</div>)}
+          <div ref={transcriptEndRef} />
+        </div>
       </div>
-      <div className={`waveform ${jarvisState === "speaking" ? "active" : jarvisState === "listening" ? "listening" : ""}`}>
-        {Array.from({ length: 40 }).map((_, i) => {
-          const seed1 = ((i * 7 + 3) % 13) / 13;
-          const seed2 = ((i * 11 + 5) % 17) / 17;
-          const seed3 = ((i * 13 + 7) % 19) / 19;
-          return <div key={i} className="bar" style={{ height: `${4 + seed1 * 12}px`, animationDelay: `${seed2 * 0.5}s`, ["--max-h" as string]: `${8 + seed3 * 14}px` }} />;
-        })}
-      </div>
-      <div className="mt-3 text-[0.65rem] tracking-[0.2em] uppercase text-[#6b7f99] flex items-center gap-1">
-        <span className={`pulse-dot ${jarvisState === "speaking" ? "speaking" : jarvisState === "listening" ? "listening" : "standby"}`} />
-        {jarvisState === "speaking" ? "JARVIS IS SPEAKING..." : jarvisState === "listening" ? "LISTENING..." : "STANDBY"}
-      </div>
-      <div className="w-full flex-1 mt-6 overflow-y-auto max-h-52 space-y-2">
-        {transcripts.map((msg) => <div key={msg.id} className={`transcript-bubble ${msg.sender}`}>{msg.text}</div>)}
-        <div ref={transcriptEndRef} />
-      </div>
-      {page === "dashboard" && (
-        <button className={`mic-btn mt-6 ${holding ? "active" : ""}`} onMouseDown={handleMicDown} onMouseUp={handleMicUp} onMouseLeave={() => holding && handleMicUp()}>
-          <Mic className="h-4 w-4" /> Hold to Speak
-        </button>
-      )}
-      <div className="mt-auto pt-6 text-center">
-        <p className="text-[0.65rem] text-[#6b7f99]">{REPORT_DATE}</p>
-        <p className="text-[0.7rem] text-[#c8d6e5] mt-1 flex items-center gap-1.5 justify-center">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Worker &middot; Site #4
-        </p>
+
+      {/* BOTTOM: mic button + date — always pinned to bottom */}
+      <div className="w-full flex flex-col items-center gap-4 pt-4">
+        {page === "dashboard" && (
+          <button className={`mic-btn w-full justify-center ${holding ? "active" : ""}`} onMouseDown={handleMicDown} onMouseUp={handleMicUp} onMouseLeave={() => holding && handleMicUp()}>
+            <Mic className="h-4 w-4" /> Hold to Speak
+          </button>
+        )}
+        <div className="text-center">
+          <p className="text-[0.65rem] text-[#6b7f99]">{REPORT_DATE}</p>
+          <p className="text-[0.7rem] text-[#c8d6e5] mt-1 flex items-center gap-1.5 justify-center">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Worker &middot; Site #4
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -385,48 +358,32 @@ export default function Home() {
       <aside className="hidden md:flex flex-col h-screen sticky top-0"><JarvisPanel /></aside>
 
       <div className="flex-1 relative z-10 overflow-y-auto h-screen flex flex-col">
-        {/* Sticky Top Bar */}
-        <div className="sticky-topbar">
-          <div className="flex items-center gap-3">
-            <span className="text-[13px] font-semibold text-[#E5E5E5]">{currentVideo.source}</span>
-            <span className="text-[13px] text-[#555]">&middot;</span>
-            <span className="text-[13px] text-[#888]">{REPORT_DATE}</span>
-          </div>
-          <div className="flex items-center gap-6">
-            {(["safety", "ergonomics", "productivity", "quality"] as const).map((key) => (
-              <div key={key} className="flex items-center gap-1.5">
-                <span className="text-[11px] text-[#555] uppercase tracking-wider font-medium">{key.slice(0, 4)}</span>
-                <span className="text-[13px] font-bold" style={{ color: getScoreColor(scores[key]) }}>{scores[key]}</span>
-              </div>
-            ))}
-          </div>
-          <button
-            className="ghost-btn"
-            onClick={() => downloadReportPDF(currentVideo)}
-          >
-            <Download className="h-3.5 w-3.5" /> PDF
-          </button>
-        </div>
-
-        <div className="px-8 lg:px-12 py-8 flex-1 flex flex-col">
-          {/* Video Selector Tab Bar — hardcoded 3 tabs */}
-          <div className="video-tab-bar">
-            {VIDEOS.map((v, i) => (
-              <button
-                key={i}
-                className={`video-tab-item ${selectedVideoIndex === i ? "active" : ""}`}
-                onClick={() => switchVideo(i)}
-              >
-                <span>{v.tabLabel}</span>
-                <span className="video-tab-duration">{v.duration}</span>
-                {selectedVideoIndex === i && <div className="video-tab-underline" />}
+        <div className="py-8 flex-1 flex flex-col" style={{ paddingLeft: "32px", paddingRight: "32px" }}>
+          {/* Video Selector Tab Bar — with Download Reports button */}
+          <div className="video-tab-bar" style={{ justifyContent: "space-between" }}>
+            <div className="flex">
+              {VIDEOS.map((v, i) => (
+                <button
+                  key={i}
+                  className={`video-tab-item ${selectedVideoIndex === i ? "active" : ""}`}
+                  onClick={() => switchVideo(i)}
+                >
+                  <span>{v.tabLabel}</span>
+                  <span className="video-tab-duration">{v.duration}</span>
+                  {selectedVideoIndex === i && <div className="video-tab-underline" />}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center pr-2 pb-1">
+              <button className="ghost-btn" onClick={() => downloadReportPDF(currentVideo)}>
+                <Download className="h-3.5 w-3.5" /> Download Report
               </button>
-            ))}
+            </div>
           </div>
 
           {/* Score Cards */}
           {dashboardLoaded && (
-            <div className="grid grid-cols-4 gap-4 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-12">
               {(["safety", "ergonomics", "productivity", "quality"] as const).map((key) => {
                 const val = scores[key];
                 const color = getScoreColor(val);
