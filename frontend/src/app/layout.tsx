@@ -15,7 +15,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "JARVIS – Personal AI Site Analysis",
+  title: "JARVIS – Intelligent Jobsite Oversight",
   description:
     "AI-powered construction site intelligence dashboard. Analyze headcam footage for safety, ergonomics, productivity, and quality insights.",
 };

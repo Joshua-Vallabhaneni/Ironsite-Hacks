@@ -4,10 +4,12 @@
 
 :root {
   --background: #080a0f;
-  --foreground: #c8d6e5;
+  --foreground: #E5E5E5;
   --muted: #0d1520;
-  --muted-foreground: #6b7f99;
-  --border: rgba(56, 139, 255, 0.08);
+  --muted-foreground: #888;
+  --label: #555;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-subtle: rgba(255, 255, 255, 0.08);
   --accent: #1e90ff;
   --accent-dim: rgba(30, 144, 255, 0.15);
   --card: rgba(10, 15, 25, 0.7);
@@ -18,13 +20,13 @@
   --primary: #1e90ff;
   --primary-foreground: #ffffff;
   --secondary: rgba(30, 144, 255, 0.1);
-  --secondary-foreground: #c8d6e5;
+  --secondary-foreground: #E5E5E5;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --accent-foreground: #c8d6e5;
+  --accent-foreground: #E5E5E5;
   --popover: #0d1520;
-  --popover-foreground: #c8d6e5;
-  --radius: 0.75rem;
+  --popover-foreground: #E5E5E5;
+  --radius: 12px;
 }
 
 * {
@@ -42,11 +44,10 @@ body {
   min-height: 100vh;
 }
 
-/* Fonts loaded via next/font/google in layout.tsx */
-
 /* ===================== Scrollbar ===================== */
 ::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -54,12 +55,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(56, 139, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(56, 139, 255, 0.25);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* ===================== Grid Background ===================== */
@@ -80,11 +81,7 @@ body {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: repeating-linear-gradient(0deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.03) 2px,
-      rgba(0, 0, 0, 0.03) 4px);
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.03) 2px, rgba(0, 0, 0, 0.03) 4px);
 }
 
 /* ===================== JARVIS Panel ===================== */
@@ -154,7 +151,7 @@ body {
 }
 
 .pulse-dot.standby {
-  background: #6b7f99;
+  background: #888;
 }
 
 @keyframes pulse {
@@ -203,50 +200,6 @@ body {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* ===================== Score Ring ===================== */
-.score-ring {
-  transform: rotate(-90deg);
-}
-
-.score-ring circle {
-  fill: none;
-  stroke-width: 3;
-  stroke-linecap: round;
-}
-
-.score-ring .track {
-  stroke: rgba(56, 139, 255, 0.08);
-}
-
-.score-ring .fill {
-  stroke: var(--cyan);
-  stroke-dasharray: 226;
-  stroke-dashoffset: 226;
-  transition: stroke-dashoffset 1.5s ease;
-}
-
-/* ===================== Tab Underline ===================== */
-.tab-underline {
-  position: relative;
-}
-
-.tab-underline::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
-  height: 1.5px;
-  background: var(--cyan);
-  border-radius: 1px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.tab-underline.active::after {
-  opacity: 1;
 }
 
 /* ===================== Mic Button ===================== */
@@ -324,31 +277,502 @@ body {
   color: var(--cyan);
 }
 
-/* ===================== Clip Thumbnail ===================== */
-.clip-thumb {
-  background: rgba(10, 15, 25, 0.6);
-  border: 1px solid var(--card-border);
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.clip-thumb:hover {
-  border-color: rgba(6, 182, 212, 0.2);
-  transform: translateY(-2px);
-}
-
-/* ===================== Glowing Effect Overrides ===================== */
+/* ===================== Glowing Effect ===================== */
 .glow {
   position: absolute;
   inset: 0;
   border-radius: inherit;
 }
 
-/* Override shadcn theme vars for dark mode */
+/* ===================== Dark Mode Overrides ===================== */
 .dark {
   --background: #080a0f;
-  --foreground: #c8d6e5;
-  --border: rgba(56, 139, 255, 0.08);
+  --foreground: #E5E5E5;
+  --border: rgba(255, 255, 255, 0.06);
+}
+
+/* ===========================================================================
+   DASHBOARD — Apple HIG-inspired redesign
+   =========================================================================== */
+
+/* ===================== Sticky Top Bar ===================== */
+.sticky-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(8, 10, 15, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ===================== Ghost Button ===================== */
+.ghost-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: #888;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.ghost-btn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #E5E5E5;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ===================== Score Tile ===================== */
+.score-tile {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* ===================== Segmented Control ===================== */
+.segmented-control {
+  display: inline-flex;
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: 5px;
+}
+
+.seg-indicator {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  width: 20%;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transition: transform 200ms ease;
+  pointer-events: none;
+}
+
+.seg-item {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #888;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 200ms ease;
+  position: relative;
+  z-index: 1;
+  background: none;
+  border: none;
+  white-space: nowrap;
+}
+
+.seg-item.active {
+  color: #fff;
+}
+
+.seg-item:hover:not(.active) {
+  color: #bbb;
+}
+
+/* ===================== Card Surface ===================== */
+.card-surface {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius);
+}
+
+/* ===================== Section Header ===================== */
+.section-header {
+  font-size: 18px;
+  font-weight: 600;
+  color: #E5E5E5;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ===================== Headline Card ===================== */
+.headline-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  min-height: 64px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-left: 4px solid;
+  transition: background 200ms ease;
+  cursor: default;
+}
+
+.headline-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ===================== Featured Clip ===================== */
+.featured-clip {
+  position: relative;
+  height: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.featured-clip:hover {
+  transform: scale(1.01);
+}
+
+.featured-clip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.featured-clip .clip-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.75) 100%);
+}
+
+/* ===================== Clip Card (unified) ===================== */
+.clip-card {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: rgba(15, 20, 30, 0.9);
+}
+
+.clip-card:hover {
+  transform: scale(1.02);
+}
+
+.clip-card .clip-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 30%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+/* ===================== Grid Clip (legacy) ===================== */
+.grid-clip {
+  position: relative;
+  aspect-ratio: 16/9;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.grid-clip:hover {
+  transform: scale(1.03);
+}
+
+.grid-clip img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.grid-clip .clip-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 20%, rgba(0, 0, 0, 0.75) 100%);
+}
+
+/* ===================== Tab Content Fade-In ===================== */
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-content-fade {
+  animation: tabFadeIn 300ms ease forwards;
+}
+
+/* ===================== Skeleton Loading ===================== */
+@keyframes shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+
+  100% {
+    background-position: 400px 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0.03) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ===================== Blocker Row ===================== */
+.blocker-row {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 200ms ease;
+}
+
+.blocker-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.blocker-bar {
+  width: 3px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ===================== Video Selector Tab Bar ===================== */
+.video-tab-bar {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 24px;
+}
+
+.video-tab-bar::-webkit-scrollbar {
+  display: none;
+}
+
+.video-tab-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #888;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 200ms ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.video-tab-item.active {
+  color: #fff;
+}
+
+.video-tab-item:hover:not(.active) {
+  color: #bbb;
+}
+
+.video-tab-underline {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: #fff;
+  border-radius: 2px 2px 0 0;
+}
+
+.video-tab-duration {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  color: #555;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* ===================== Metadata Strip ===================== */
+.metadata-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #888;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ===================== Audit Trail Drawer ===================== */
+.audit-trail-drawer {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.audit-trail-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px 0;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+
+.audit-trail-toggle:hover {
+  color: #E5E5E5;
+}
+
+.audit-trail-content {
+  padding-bottom: 24px;
+  animation: tabFadeIn 200ms ease forwards;
+}
+
+.audit-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+
+.audit-table th {
+  text-align: left;
+  padding: 10px 12px;
+  color: #555;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+  white-space: nowrap;
+}
+
+.audit-table td {
+  padding: 8px 12px;
+  color: #888;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+
+.audit-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ===================== Lightbox Modal ===================== */
+.lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 200ms ease;
+}
+
+.lightbox-content {
+  position: relative;
+  width: 90%;
+  max-width: 800px;
+  padding: 24px;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #E5E5E5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 200ms ease;
+  z-index: 10;
+}
+
+.lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ===================== Truncated Text Fade ===================== */
+.truncated-text-container {
+  max-height: 120px;
+  overflow: hidden;
+  position: relative;
+}
+
+.truncated-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(to bottom, transparent, var(--background));
+  pointer-events: none;
+}
+
+/* ===================== Narrative Prose ===================== */
+.narrative-prose {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #888;
+}
+
+.narrative-prose p {
+  margin-bottom: 12px;
+}
+
+.narrative-prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* ===================== File Chips ===================== */
+.file-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
