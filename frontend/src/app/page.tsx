@@ -54,6 +54,14 @@ const VIDEOS: HardcodedVideo[] = [
       { eventId: "approach_hazard_proxy_1c2b62", timestamp: "00:11:56", type: "Approach Hazard Proxy", severity: "med", clipPath: "/ConstructionData/vid2Data/vid2-approachhazard.mp4", confidence: 0.80 },
       { eventId: "ppe_violation_b01500", timestamp: "00:04:29", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid2Data/vid2-ppe.mp4", confidence: 0.75 },
       { eventId: "verification_moment_b89e43", timestamp: "00:04:00", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid2Data/vid2-verification.mp4", confidence: 0.70 },
+      { eventId: "ppe_violation_007241", timestamp: "00:05:30", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid2Data/vid2Clips/ppe_violation_007241.mp4", confidence: 0.80 },
+      { eventId: "ppe_violation_fab518", timestamp: "00:18:40", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid2Data/vid2Clips/ppe_violation_fab518.mp4", confidence: 0.75 },
+      { eventId: "rework_proxy_34fab6", timestamp: "00:04:31", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid2Data/vid2Clips/rework_proxy_34fab6.mp4", confidence: 0.85 },
+      { eventId: "rework_proxy_379d49", timestamp: "00:06:08", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid2Data/vid2Clips/rework_proxy_379d49.mp4", confidence: 0.70 },
+      { eventId: "rework_proxy_b4e63f", timestamp: "00:04:29", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid2Data/vid2Clips/rework_proxy_b4e63f.mp4", confidence: 0.85 },
+      { eventId: "task_transition_729d1a", timestamp: "00:04:33", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid2Data/vid2Clips/task_transition_729d1a.mp4", confidence: 0.85 },
+      { eventId: "task_transition_75f57a", timestamp: "00:19:13", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid2Data/vid2Clips/task_transition_75f57a.mp4", confidence: 0.75 },
+      { eventId: "task_transition_c79480", timestamp: "00:20:44", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid2Data/vid2Clips/task_transition_c79480.mp4", confidence: 0.90 },
     ],
   },
   {
@@ -66,6 +74,15 @@ const VIDEOS: HardcodedVideo[] = [
     clips: [
       { eventId: "idle_streak_a602a2", timestamp: "00:00:35", type: "Idle Streak", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3-idle.mp4", confidence: 0.80 },
       { eventId: "ppe_violation_42553b", timestamp: "00:00:58", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid3Data/vid3-ppe.mp4", confidence: 0.85 },
+      { eventId: "idle_streak_ca30f2", timestamp: "00:01:38", type: "Idle Streak", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/idle_streak_ca30f2.mp4", confidence: 0.80 },
+      { eventId: "ppe_violation_ba73f6", timestamp: "00:10:02", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid3Data/vid3clips/ppe_violation_ba73f6.mp4", confidence: 0.85 },
+      { eventId: "ppe_violation_c888cd", timestamp: "00:01:29", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid3Data/vid3clips/ppe_violation_c888cd.mp4", confidence: 0.80 },
+      { eventId: "task_transition_68ffb2", timestamp: "00:12:08", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/task_transition_68ffb2.mp4", confidence: 0.75 },
+      { eventId: "task_transition_b61394", timestamp: "00:10:07", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/task_transition_b61394.mp4", confidence: 0.85 },
+      { eventId: "verification_moment_07ab17", timestamp: "00:15:38", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/verification_moment_07ab17.mp4", confidence: 0.70 },
+      { eventId: "verification_moment_314892", timestamp: "00:21:12", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/verification_moment_314892.mp4", confidence: 0.70 },
+      { eventId: "verification_moment_92ddd9", timestamp: "00:09:06", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/verification_moment_92ddd9.mp4", confidence: 0.70 },
+      { eventId: "verification_moment_ff5ed4", timestamp: "00:00:00", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid3Data/vid3clips/verification_moment_ff5ed4.mp4", confidence: 0.70 },
     ],
   },
   {
@@ -79,6 +96,15 @@ const VIDEOS: HardcodedVideo[] = [
       { eventId: "rework_proxy_a60089", timestamp: "00:01:31", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-rework.mp4", confidence: 0.90 },
       { eventId: "task_transition_c14298", timestamp: "00:05:30", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-task-trans.mp4", confidence: 0.80 },
       { eventId: "verification_moment_e6aa6f", timestamp: "00:20:00", type: "Verification Moment", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-verify.mp4", confidence: 0.75 },
+      { eventId: "ppe_violation_700e6b", timestamp: "00:19:58", type: "Ppe Violation", severity: "high", clipPath: "/ConstructionData/vid5Data/vid5-clips/ppe_violation_700e6b.mp4", confidence: 0.75 },
+      { eventId: "rework_proxy_001777", timestamp: "00:12:15", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_001777.mp4", confidence: 0.93 },
+      { eventId: "rework_proxy_141975", timestamp: "00:07:42", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_141975.mp4", confidence: 0.80 },
+      { eventId: "rework_proxy_567d85", timestamp: "00:06:42", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_567d85.mp4", confidence: 0.90 },
+      { eventId: "rework_proxy_b150f8", timestamp: "00:06:48", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_b150f8.mp4", confidence: 0.85 },
+      { eventId: "rework_proxy_c0407f", timestamp: "00:06:43", type: "Rework Proxy", severity: "med", clipPath: "/ConstructionData/vid5Data/vid5-clips/rework_proxy_c0407f.mp4", confidence: 0.90 },
+      { eventId: "task_transition_21dff7", timestamp: "00:16:30", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-clips/task_transition_21dff7.mp4", confidence: 0.95 },
+      { eventId: "task_transition_2c812c", timestamp: "00:15:00", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-clips/task_transition_2c812c.mp4", confidence: 0.93 },
+      { eventId: "task_transition_befcd7", timestamp: "00:14:00", type: "Task Transition", severity: "low", clipPath: "/ConstructionData/vid5Data/vid5-clips/task_transition_befcd7.mp4", confidence: 0.75 },
     ],
   },
 ];
@@ -142,7 +168,7 @@ function LightboxModal({ clip, onClose }: { clip: HardcodedClip; onClose: () => 
           <X className="h-5 w-5" />
         </button>
         <div className="rounded-lg overflow-hidden bg-black aspect-video flex items-center justify-center">
-          <video key={clip.clipPath} controls autoPlay playsInline preload="auto" className="w-full h-full" src={clip.clipPath} />
+          <video key={clip.clipPath} controls autoPlay muted playsInline preload="auto" className="w-full h-full" src={clip.clipPath} />
         </div>
         <div className="mt-4 space-y-2">
           <div className="flex items-center gap-3">
@@ -169,6 +195,45 @@ function LightboxModal({ clip, onClose }: { clip: HardcodedClip; onClose: () => 
 }
 
 /* ============================================================
+   COMPONENT: LazyVideo — loads video src only when visible
+   ============================================================ */
+function LazyVideo({ src, delay = 0 }: { src: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [loadSrc, setLoadSrc] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setLoadSrc(true), delay);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [delay]);
+
+  return (
+    <div ref={ref} className="absolute inset-0 w-full h-full">
+      {loadSrc && (
+        <video
+          src={src}
+          muted
+          preload="metadata"
+          playsInline
+          className="w-full h-full object-cover"
+          onLoadedData={(e) => { (e.currentTarget as HTMLVideoElement).currentTime = 1; }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
    COMPONENT: MustWatchClips
    ============================================================ */
 function MustWatchClips({ clips }: { clips: HardcodedClip[] }) {
@@ -186,41 +251,35 @@ function MustWatchClips({ clips }: { clips: HardcodedClip[] }) {
     <div className="flex flex-col gap-5 flex-1">
       <h3 className="text-[18px] font-semibold text-[#E5E5E5]">Must-Watch Clips</h3>
 
-      {/* Uniform grid — all clips same size */}
-      <div className={`grid gap-8 ${clips.length <= 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-        {clips.map((clip, i) => (
-          <div
-            key={i}
-            className="clip-card group"
-            style={{ border: `1.5px solid ${getSeverityBorder(clip.severity)}` }}
-            onClick={() => setLightboxClip(clip)}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = getSeverityGlow(clip.severity); }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}
-          >
-            {/* Video thumbnail */}
-            <video
-              src={clip.clipPath}
-              muted
-              preload="metadata"
-              playsInline
-              className="absolute inset-0 w-full h-full object-cover"
-              onLoadedData={(e) => { (e.currentTarget as HTMLVideoElement).currentTime = 1; }}
-            />
-            <div className="clip-gradient" />
+      {/* Scrollable grid container */}
+      <div className="clips-scroll-container">
+        <div className={`grid gap-8 ${clips.length <= 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+          {clips.map((clip, i) => (
+            <div
+              key={i}
+              className="clip-card group"
+              style={{ border: `1.5px solid ${getSeverityBorder(clip.severity)}` }}
+              onClick={() => setLightboxClip(clip)}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = getSeverityGlow(clip.severity); }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}
+            >
+              {/* Lazy-loaded video thumbnail */}
+              <LazyVideo src={clip.clipPath} delay={i * 100} />
+              <div className="clip-gradient" />
 
+              <div className="absolute bottom-3 left-3 right-3 z-10">
+                <p className="text-[14px] font-semibold text-white leading-snug">{clip.type}</p>
+                <span className="text-[11px] font-mono text-white/50 mt-1 inline-block">{clip.timestamp}</span>
+              </div>
 
-            <div className="absolute bottom-3 left-3 right-3 z-10">
-              <p className="text-[14px] font-semibold text-white leading-snug">{clip.type}</p>
-              <span className="text-[11px] font-mono text-white/50 mt-1 inline-block">{clip.timestamp}</span>
-            </div>
-
-            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-              <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center">
-                <Play className="h-5 w-5 text-white ml-0.5" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                <div className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center">
+                  <Play className="h-5 w-5 text-white ml-0.5" />
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
       {lightboxClip && (
@@ -262,7 +321,7 @@ export default function Home() {
     startSession,
     endSession,
     sendContextualUpdate,
-  } = useJarvisAgent(true);
+  } = useJarvisAgent(false);
 
   useEffect(() => { transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [transcripts]);
 
@@ -402,9 +461,6 @@ export default function Home() {
 
         <div className="mt-auto pt-6 text-center">
           <p className="text-[0.65rem] text-[#6b7f99]">{REPORT_DATE}</p>
-          <p className="text-[0.7rem] text-[#c8d6e5] mt-1 flex items-center gap-1.5 justify-center">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Worker &middot; Site #4
-          </p>
         </div>
       </div>
     </div>
