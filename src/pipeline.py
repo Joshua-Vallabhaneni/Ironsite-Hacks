@@ -51,6 +51,9 @@ def parse_args():
                         help="Legacy: equivalent to --mode augmented")
 
     # Optional config overrides
+    parser.add_argument("--video_file", type=str, default=None,
+                        help="Run on a specific video filename (e.g. 05_scaffolding.mp4). "
+                             "Must exist inside --input_dir.")
     parser.add_argument("--max_videos", type=int, default=None,
                         help="Max number of videos to process")
     parser.add_argument("--max_minutes_per_video", type=float, default=None,
@@ -148,7 +151,14 @@ def run_pipeline(args):
 
     # Discover videos
     video_files = video_io.list_videos(args.input_dir)
-    if args.max_videos:
+
+    if args.video_file:
+        target = args.video_file
+        video_files = [vf for vf in video_files if os.path.basename(vf) == target]
+        if not video_files:
+            log.error(f"--video_file '{target}' not found in {args.input_dir}")
+            sys.exit(1)
+    elif args.max_videos:
         video_files = video_files[:args.max_videos]
 
     if not video_files:
