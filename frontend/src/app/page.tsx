@@ -6,20 +6,19 @@ import {
   Mic,
   Play,
   X,
+  Phone,
+  PhoneOff,
+  Folder,
 } from "lucide-react";
+import { VideoUploadCard } from "@/components/ui/video-upload-card";
 import { VoicePoweredOrb } from "@/components/ui/voice-powered-orb";
 import { SAMPLE_REPORT } from "@/lib/sample-report";
+import { useJarvisAgent, type JarvisState, type TranscriptMsg } from "@/hooks/useJarvisAgent";
 
 /* ============================================================
    TYPES
    ============================================================ */
-type JarvisState = "idle" | "speaking" | "listening";
-
-interface TranscriptMsg {
-  id: number;
-  text: string;
-  sender: "jarvis" | "user";
-}
+type Page = "upload" | "dashboard";
 
 interface HardcodedClip {
   eventId: string;
@@ -245,19 +244,27 @@ function downloadReportPDF(_video: HardcodedVideo) {
    MAIN PAGE
    ============================================================ */
 export default function Home() {
-  const page = "dashboard";
+  const [page, setPage] = useState<Page>("upload");
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
-  const [jarvisState, setJarvisState] = useState<JarvisState>("speaking");
-  const [transcripts, setTranscripts] = useState<TranscriptMsg[]>([
-    { id: 1, text: "Analysis complete. Today's report is ready. I've identified key quality and productivity insights. Shall I walk you through the highlights?", sender: "jarvis" },
-  ]);
-  const [holding, setHolding] = useState(false);
+
   const [dashboardLoaded, setDashboardLoaded] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [processStep, setProcessStep] = useState(-1);
   const transcriptEndRef = useRef<HTMLDivElement>(null);
-  const msgIdRef = useRef(2);
+
+  // ElevenLabs voice agent hook
+  const {
+    jarvisState,
+    transcripts,
+    setTranscripts,
+    addMsg,
+    status: agentStatus,
+    startSession,
+    endSession,
+    sendContextualUpdate,
+  } = useJarvisAgent(true);
 
   useEffect(() => { transcriptEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [transcripts]);
-  useEffect(() => { const t = setTimeout(() => setJarvisState("idle"), 4000); return () => clearTimeout(t); }, []);
 
   useEffect(() => {
     setDashboardLoaded(false);
@@ -265,36 +272,80 @@ export default function Home() {
     return () => clearTimeout(t);
   }, [selectedVideoIndex]);
 
-  const addMsg = useCallback((text: string, sender: "jarvis" | "user") => {
-    setTranscripts((prev) => {
-      const next = [...prev, { id: msgIdRef.current++, text, sender }];
-      return next.slice(-6);
-    });
+  /* ---------- Screen Context Builder ---------- */
+  const buildScreenContext = useCallback((videoIndex: number): string => {
+    const video = VIDEOS[videoIndex];
+    return [
+      `SCREEN_CONTEXT:`,
+      `Report: ${REPORT_DATE}, Video: ${video.source}, Duration: ${video.duration}`,
+      `Worker: Marcus Rivera, Site: #4`,
+      `Scoreboard: Safety ${video.scores.safety}/100, Ergonomics ${video.scores.ergonomics}/100, Productivity ${video.scores.productivity}/100, Quality ${video.scores.quality}/100`,
+      `Events Detected: ${video.eventsDetected}`,
+      `Clips on screen:`,
+      ...video.clips.map(c => `  - ${c.timestamp} | ${c.type} (${c.severity} severity) - Confidence: ${(c.confidence * 100).toFixed(0)}%`)
+    ].join("\n");
   }, []);
 
-  const handleMicDown = () => { setHolding(true); setJarvisState("listening"); };
-  const handleMicUp = () => {
-    if (!holding) return;
-    setHolding(false);
-    addMsg("Can you tell me more about the quality findings?", "user");
+  /* ---------- Send context on dashboard entry or video change ---------- */
+  useEffect(() => {
+    if (page === "dashboard" && agentStatus === "connected") {
+      const ctx = buildScreenContext(selectedVideoIndex);
+      sendContextualUpdate(ctx);
+    }
+  }, [page, agentStatus, selectedVideoIndex, buildScreenContext, sendContextualUpdate]);
+
+
+  /* ---------- Processing Simulation ---------- */
+  const startProcessing = useCallback(() => {
+    setProcessing(true);
+
+    const steps = [
+      { msg: "Uploading footage... complete.", delay: 1200 },
+      { msg: "Running spatial depth analysis...", delay: 2000 },
+      { msg: "Tracking hand and tool interactions...", delay: 2500 },
+      { msg: "Generating your performance report...", delay: 2000 },
+    ];
+
+    let cumulative = 0;
+    steps.forEach((s, i) => {
+      cumulative += s.delay;
+      setTimeout(() => {
+        setProcessStep(i);
+        addMsg(s.msg, "jarvis");
+      }, cumulative);
+    });
+
+    cumulative += 2000;
     setTimeout(() => {
-      setJarvisState("speaking");
-      addMsg("Of course. Today I detected verification moments and rework proxy events across the videos. The rework events suggest workers returned to completed areas multiple times, which may indicate corrections were needed.", "jarvis");
-      setTimeout(() => setJarvisState("idle"), 5000);
-    }, 1000);
-  };
+      setProcessStep(4);
+      addMsg("Analysis complete. Transitioning to your dashboard...", "jarvis");
+      setTimeout(() => {
+        setPage("dashboard");
+        setProcessing(false);
+        setProcessStep(-1);
+        setTranscripts((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            text: "Analysis complete. Today's report is ready. I've identified key quality and productivity insights. Click Start Conversation to discuss the findings with me.",
+            sender: "jarvis",
+          },
+        ]);
+      }, 1200);
+    }, cumulative);
+  }, [addMsg, setTranscripts]);
 
   const switchVideo = (index: number) => {
     setSelectedVideoIndex(index);
-    setJarvisState("speaking");
-    addMsg(`Switching to ${VIDEOS[index].tabLabel}. Loading report data...`, "jarvis");
-    setTimeout(() => setJarvisState("idle"), 2000);
+    if (agentStatus !== "connected") {
+      addMsg(`Switching to ${VIDEOS[index].tabLabel}. Loading report data...`, "jarvis");
+    }
   };
 
   const currentVideo = VIDEOS[selectedVideoIndex];
   const scores = currentVideo.scores;
 
-  /* ---------- JARVIS Panel (shared, UNTOUCHED) ---------- */
+  /* ---------- JARVIS Panel ---------- */
   const JarvisPanel = () => (
     <div className="jarvis-panel w-full md:w-72 lg:w-80 flex flex-col items-center py-8 px-6 h-full relative z-10">
       {/* MIDDLE: title + orb + waveform + transcript — grows to fill available space */}
@@ -304,7 +355,7 @@ export default function Home() {
         <div className="orb-glow w-44 h-44 my-6 p-5 flex-shrink-0">
           <VoicePoweredOrb enableVoiceControl={false} hue={0} className="w-full h-full" />
         </div>
-        <div className={`waveform flex-shrink-0 ${jarvisState === "speaking" ? "active" : jarvisState === "listening" ? "listening" : ""}`}>
+        <div className={`waveform ${jarvisState === "speaking" ? "active" : jarvisState === "listening" ? "listening" : ""}`}>
           {Array.from({ length: 40 }).map((_, i) => {
             const seed1 = ((i * 7 + 3) % 13) / 13;
             const seed2 = ((i * 11 + 5) % 17) / 17;
@@ -312,24 +363,44 @@ export default function Home() {
             return <div key={i} className="bar" style={{ height: `${4 + seed1 * 12}px`, animationDelay: `${seed2 * 0.5}s`, ["--max-h" as string]: `${8 + seed3 * 14}px` }} />;
           })}
         </div>
-        <div className="mt-3 flex-shrink-0 text-[0.65rem] tracking-[0.2em] uppercase text-[#6b7f99] flex items-center gap-1">
+        <div className="mt-3 text-[0.65rem] tracking-[0.2em] uppercase text-[#6b7f99] flex items-center gap-1">
           <span className={`pulse-dot ${jarvisState === "speaking" ? "speaking" : jarvisState === "listening" ? "listening" : "standby"}`} />
-          {jarvisState === "speaking" ? "JARVIS IS SPEAKING..." : jarvisState === "listening" ? "LISTENING..." : "STANDBY"}
+          {agentStatus === "connected" ? (jarvisState === "speaking" ? "JARVIS IS SPEAKING..." : "LISTENING...") : "STANDBY"}
         </div>
-        <div className="w-full mt-4 flex-1 min-h-0 overflow-y-auto space-y-2">
+        <div className="w-full flex-1 mt-6 overflow-y-auto max-h-52 space-y-2 pr-2 custom-scrollbar">
           {transcripts.map((msg) => <div key={msg.id} className={`transcript-bubble ${msg.sender}`}>{msg.text}</div>)}
           <div ref={transcriptEndRef} />
         </div>
-      </div>
 
-      {/* BOTTOM: mic button + date — always pinned to bottom */}
-      <div className="w-full flex flex-col items-center gap-4 pt-4">
         {page === "dashboard" && (
-          <button className={`mic-btn w-full justify-center ${holding ? "active" : ""}`} onMouseDown={handleMicDown} onMouseUp={handleMicUp} onMouseLeave={() => holding && handleMicUp()}>
-            <Mic className="h-4 w-4" /> Hold to Speak
-          </button>
+          <div className="flex flex-col items-center gap-3 mt-6">
+            {agentStatus === "connected" ? (
+              <button
+                className="mic-btn active"
+                onClick={endSession}
+              >
+                <PhoneOff className="h-4 w-4 mr-2 inline-block" />
+                End Conversation
+              </button>
+            ) : (
+              <button
+                className="mic-btn"
+                onClick={startSession}
+              >
+                <Phone className="h-4 w-4 mr-2 inline-block" />
+                Start Conversation
+              </button>
+            )}
+            {agentStatus === "connected" && (
+              <p className="text-[0.6rem] text-emerald-400 tracking-widest uppercase flex items-center gap-1 mt-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                Live — Just speak naturally
+              </p>
+            )}
+          </div>
         )}
-        <div className="text-center">
+
+        <div className="mt-auto pt-6 text-center">
           <p className="text-[0.65rem] text-[#6b7f99]">{REPORT_DATE}</p>
           <p className="text-[0.7rem] text-[#c8d6e5] mt-1 flex items-center gap-1.5 justify-center">
             <span className="w-1.5 h-1.5 rounded-full bg-green-400" /> Worker &middot; Site #4
@@ -339,7 +410,7 @@ export default function Home() {
     </div>
   );
 
-  /* ---------- DASHBOARD ---------- */
+  /* ---------- DASHBOARD (Sub-components) ---------- */
   const ContentSkeleton = () => (
     <div className="space-y-4 p-6">
       <Skeleton className="h-5 w-48 mb-4" />
@@ -351,6 +422,110 @@ export default function Home() {
       </div>
     </div>
   );
+
+  /* ---------- UPLOAD PAGE ---------- */
+  if (page === "upload") {
+    return (
+      <main className="h-screen flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="bg-grid" />
+        <div className="scanlines" />
+
+        <div className="relative z-10 flex flex-col items-center w-full max-w-2xl px-8">
+          <div className="flex flex-col items-center mb-10">
+            <h1 className="text-lg font-bold tracking-widest text-[#06b6d4] uppercase">
+              JARVIS
+            </h1>
+            <p className="text-[0.6rem] text-[#6b7f99] tracking-[0.25em] uppercase mt-0.5">
+              Intelligent Jobsite Oversight
+            </p>
+
+            <div className="orb-glow w-36 h-36 my-6">
+              <VoicePoweredOrb
+                enableVoiceControl={false}
+                hue={0}
+                className="w-full h-full"
+              />
+            </div>
+
+            <div className={`waveform ${jarvisState === "speaking" ? "active" : jarvisState === "listening" ? "listening" : ""}`}>
+              {Array.from({ length: 40 }).map((_, i) => {
+                const seed1 = ((i * 7 + 3) % 13) / 13;
+                const seed2 = ((i * 11 + 5) % 17) / 17;
+                const seed3 = ((i * 13 + 7) % 19) / 19;
+                return (
+                  <div
+                    key={i}
+                    className="bar"
+                    style={{
+                      height: `${4 + seed1 * 12}px`,
+                      animationDelay: `${seed2 * 0.5}s`,
+                      ["--max-h" as string]: `${8 + seed3 * 14}px`,
+                    }}
+                  />
+                );
+              })}
+            </div>
+
+            <div className="mt-3 text-[0.65rem] tracking-[0.2em] uppercase text-[#6b7f99] flex items-center gap-1">
+              <span className={`pulse-dot ${jarvisState === "speaking" ? "speaking" : jarvisState === "listening" ? "listening" : "standby"}`} />
+              {jarvisState === "speaking" ? "JARVIS IS SPEAKING..." : jarvisState === "listening" ? "LISTENING..." : "STANDBY"}
+            </div>
+
+            <div className="w-full max-w-md mt-4 space-y-2">
+              {transcripts.slice(-2).map((msg) => (
+                <div key={msg.id} className={`transcript-bubble ${msg.sender}`}>
+                  {msg.text}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {!processing ? (
+            <VideoUploadCard
+              title="Upload Headcam Footage"
+              description="Drop your video files here to begin AI-powered site analysis."
+              className="w-full"
+              onFileSelected={() => startProcessing()}
+            />
+          ) : (
+            <div className="w-full max-w-xl">
+              <p className="text-sm text-[#c8d6e5] text-center mb-8">
+                Analyzing footage...
+              </p>
+              <div className="flex items-center justify-between">
+                {["Upload", "Process", "Analyze", "Report"].map((label, i) => (
+                  <div key={label} className="flex items-center flex-1 last:flex-initial">
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`progress-step ${processStep === i ? "active" : processStep > i ? "done" : ""}`}
+                      >
+                        <div className="step-dot">
+                          {processStep > i ? "✓" : i + 1}
+                        </div>
+                      </div>
+                      <span
+                        className={`text-[0.7rem] mt-2 ${processStep >= i ? "text-[#c8d6e5]" : "text-[#6b7f99]"}`}
+                      >
+                        {label}
+                      </span>
+                    </div>
+                    {i < 3 && (
+                      <div
+                        className={`flex-1 h-px mx-3 mb-5 ${processStep > i
+                          ? "bg-[rgba(6,182,212,0.4)]"
+                          : "bg-[rgba(56,139,255,0.1)]"
+                          }`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="h-screen flex relative overflow-hidden">
