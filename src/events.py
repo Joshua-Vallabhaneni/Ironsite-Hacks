@@ -143,12 +143,74 @@ def _detect_idle_streaks(kfs: List[dict], video_file: str) -> List[dict]:
 
 def _detect_task_transitions(kfs: List[dict], video_file: str) -> List[dict]:
     """
-    Detect task_transition events from motion spikes + histogram diff.
-    Deduplicates nearby transitions and caps per-video count.
+    Detect task_transition events.
+
+    Primary path (label-based): fires when Gemini direct labels change between
+    work categories (direct / contributory / noncontributory).
+    Used when >= 3 direct-labeled frames are available in the video.
+
+    Fallback path (signal-based): motion spike + histogram diff.
+    Used when label coverage is insufficient (< 3 direct labels).
+
+    Results are deduplicated and capped per-video.
     """
     if len(kfs) < 3:
         return []
 
+    direct_labeled = [
+        kf for kf in kfs
+        if (kf.get("gemini_label")
+            and not kf["gemini_label"].get("interpolated")
+            and kf["gemini_label"].get("confidence", 0) >= config.ACTIVITY_LABEL_CONF_THRESH)
+    ]
+
+    if len(direct_labeled) >= 3:
+        raw = _label_based_transitions(direct_labeled, video_file)
+    else:
+        raw = _signal_based_transitions(kfs, video_file)
+
+    return _dedup_task_transitions(raw)
+
+
+def _label_based_transitions(labeled_kfs: List[dict], video_file: str) -> List[dict]:
+    """Detect task transitions from Gemini label category changes."""
+    def _category(activity: str) -> str:
+        if activity in config.ACTIVITY_DIRECT_WORK:
+            return "direct"
+        if activity in config.ACTIVITY_CONTRIBUTORY:
+            return "contributory"
+        return "noncontributory"
+
+    raw = []
+    prev_category = None
+    prev_activity = None
+
+    for kf in labeled_kfs:
+        activity = kf["gemini_label"].get("activity", "other")
+        category = _category(activity)
+
+        if prev_category is not None and category != prev_category:
+            raw.append(_make_event(
+                "task_transition", video_file, kf["timestamp_sec"],
+                kf["timestamp_sec"] + 2.0, "low", 0.75,
+                [kf.get("frame_path", "")],
+                {
+                    "trigger": "label",
+                    "from_activity": prev_activity,
+                    "to_activity": activity,
+                    "from_category": prev_category,
+                    "to_category": category,
+                },
+            ))
+
+        prev_category = category
+        prev_activity = activity
+
+    return raw
+
+
+def _signal_based_transitions(kfs: List[dict], video_file: str) -> List[dict]:
+    """Detect task transitions from motion spikes + histogram diff (fallback)."""
     motions = [kf.get("motion_magnitude", 0) or 0 for kf in kfs]
     mean_motion = sum(motions) / len(motions) if motions else 0
     variance = sum((m - mean_motion) ** 2 for m in motions) / max(len(motions), 1)
@@ -165,11 +227,14 @@ def _detect_task_transitions(kfs: List[dict], video_file: str) -> List[dict]:
                 "task_transition", video_file, kf["timestamp_sec"],
                 kf["timestamp_sec"] + 2.0, "low", 0.7,
                 [kf.get("frame_path", "")],
-                {"motion_magnitude": round(motion, 2),
-                 "hist_diff": round(hist_diff, 4)},
+                {
+                    "trigger": "signal",
+                    "motion_magnitude": round(motion, 2),
+                    "hist_diff": round(hist_diff, 4),
+                },
             ))
 
-    return _dedup_task_transitions(raw)
+    return raw
 
 
 def _dedup_task_transitions(transitions: List[dict]) -> List[dict]:
@@ -201,21 +266,63 @@ def _dedup_task_transitions(transitions: List[dict]) -> List[dict]:
 # ---------------------------------------------------------------------------
 
 def _detect_near_miss(kfs: List[dict], video_file: str) -> List[dict]:
-    """Detect near_miss_proxy events."""
-    events = []
-    for kf in kfs:
-        overlap = kf.get("hand_tool_overlap_pct", 0) or 0
-        tool_active = kf.get("tool_active", False) or False
+    """
+    Detect near_miss_proxy events.
 
-        if overlap > config.NEAR_MISS_OVERLAP_THRESH and tool_active:
+    Two trigger paths:
+      1. Label-based (primary): tool held + high-risk posture + active work activity.
+         Only fires on direct (non-interpolated) labels with >= 30s cooldown.
+      2. Signal-based (fallback): hand_tool_overlap + tool_active (for rules_only mode).
+    """
+    events = []
+    last_event_sec = -999.0
+    COOLDOWN = 30.0
+
+    for kf in kfs:
+        label = kf.get("gemini_label")
+        triggered = False
+        signals = {}
+
+        # Path 1: label-based (direct labels only, not interpolated)
+        if (label
+                and label.get("confidence", 0) >= config.ACTIVITY_LABEL_CONF_THRESH
+                and not label.get("interpolated")):
+            tool = label.get("tool_held", "unknown")
+            posture = label.get("posture", "other")
+            activity = label.get("activity", "other")
+            if (tool not in ("none", "unknown")
+                    and posture in config.NEAR_MISS_HIGH_RISK_POSTURES
+                    and activity in config.NEAR_MISS_ACTIVE_ACTIVITIES):
+                triggered = True
+                signals = {
+                    "trigger": "label",
+                    "tool_held": tool,
+                    "posture": posture,
+                    "activity": activity,
+                }
+
+        # Path 2: signal-based fallback (when label path not triggered)
+        if not triggered:
+            overlap = kf.get("hand_tool_overlap_pct", 0) or 0
+            tool_active = kf.get("tool_active", False) or False
+            if overlap > config.NEAR_MISS_OVERLAP_THRESH and tool_active:
+                triggered = True
+                signals = {
+                    "trigger": "signal",
+                    "hand_tool_overlap_pct": overlap,
+                    "tool_active": tool_active,
+                    "tool_class": kf.get("tool_class"),
+                }
+
+        if triggered and (kf["timestamp_sec"] - last_event_sec) >= COOLDOWN:
             events.append(_make_event(
                 "near_miss_proxy", video_file, kf["timestamp_sec"],
                 kf["timestamp_sec"] + 2.0, "med", 0.6,
                 [kf.get("frame_path", "")],
-                {"hand_tool_overlap_pct": overlap,
-                 "tool_active": tool_active,
-                 "tool_class": kf.get("tool_class")},
+                signals,
             ))
+            last_event_sec = kf["timestamp_sec"]
+
     return events
 
 
@@ -224,18 +331,34 @@ def _detect_near_miss(kfs: List[dict], video_file: str) -> List[dict]:
 # ---------------------------------------------------------------------------
 
 def _detect_occlusion_critical(kfs: List[dict], video_file: str) -> List[dict]:
-    """Detect occlusion_critical events (sustained high overlap during high motion)."""
+    """
+    Detect occlusion_critical events.
+
+    Two trigger paths:
+      1. Depth-based (primary): high discontinuity_risk + high interaction_density
+         sustained for >= OCCLUSION_MIN_FRAMES consecutive frames.
+      2. Signal-based (fallback): high hand_tool_overlap + high motion.
+    """
     events = []
     consecutive = 0
     start_kf = None
+    trigger_type = "signal"
 
     for kf in kfs:
         overlap = kf.get("hand_tool_overlap_pct", 0) or 0
         motion = kf.get("motion_magnitude", 0) or 0
+        disc_risk = kf.get("depth_stats", {}).get("discontinuity_risk", 0) or 0
+        interaction = kf.get("interaction_density", 0) or 0
 
-        if overlap > config.OCCLUSION_THRESH and motion > config.MOTION_THRESH_HIGH:
+        depth_trigger = (disc_risk > config.DEPTH_HAZARD_DISC_RISK_THRESH
+                         and interaction > config.INTERACTION_THRESH_HIGH)
+        signal_trigger = (overlap > config.OCCLUSION_THRESH
+                          and motion > config.MOTION_THRESH_HIGH)
+
+        if depth_trigger or signal_trigger:
             if consecutive == 0:
                 start_kf = kf
+                trigger_type = "depth" if depth_trigger else "signal"
             consecutive += 1
         else:
             if consecutive >= config.OCCLUSION_MIN_FRAMES and start_kf:
@@ -243,10 +366,21 @@ def _detect_occlusion_critical(kfs: List[dict], video_file: str) -> List[dict]:
                     "occlusion_critical", video_file, start_kf["timestamp_sec"],
                     kf["timestamp_sec"], "high", 0.6,
                     [start_kf.get("frame_path", "")],
-                    {"consecutive_frames": consecutive, "max_overlap": overlap},
+                    {"consecutive_frames": consecutive,
+                     "trigger": trigger_type,
+                     "max_disc_risk": round(disc_risk, 3)},
                 ))
             consecutive = 0
             start_kf = None
+
+    # Trailing sequence
+    if consecutive >= config.OCCLUSION_MIN_FRAMES and start_kf and kfs:
+        events.append(_make_event(
+            "occlusion_critical", video_file, start_kf["timestamp_sec"],
+            kfs[-1]["timestamp_sec"], "high", 0.6,
+            [start_kf.get("frame_path", "")],
+            {"consecutive_frames": consecutive, "trigger": trigger_type},
+        ))
 
     return events
 
@@ -348,38 +482,62 @@ def _detect_verification_moments(kfs: List[dict], video_file: str) -> List[dict]
 # ---------------------------------------------------------------------------
 
 def _detect_rework(kfs: List[dict], video_file: str) -> List[dict]:
-    """Detect rework_proxy events (repeated high interaction in same spatial region)."""
+    """
+    Detect rework_proxy events (worker returning to same spatial region after a gap).
+
+    Groups high-interaction frames into bursts (consecutive frames within
+    REWORK_BURST_GAP_SEC of each other). A rework event fires only when the same
+    region has >= 2 distinct bursts separated by >= REWORK_MIN_GAP_SEC, indicating
+    the worker left and returned to redo work — not just sustained work in one place.
+    """
     events = []
-    region_bursts = defaultdict(list)
+    region_high_kfs = defaultdict(list)
 
     for kf in kfs:
         interaction = kf.get("interaction_density", 0) or 0
         region = kf.get("spatial_region", 4)
 
         if interaction > config.INTERACTION_THRESH_HIGH:
-            region_bursts[region].append(kf)
+            region_high_kfs[region].append(kf)
 
-    for region, burst_kfs in region_bursts.items():
-        if len(burst_kfs) < 3:
+    for region, hi_kfs in region_high_kfs.items():
+        if len(hi_kfs) < 2:
             continue
 
-        for i in range(len(burst_kfs)):
-            window_kfs = [burst_kfs[i]]
-            for j in range(i + 1, len(burst_kfs)):
-                if (burst_kfs[j]["timestamp_sec"] - burst_kfs[i]["timestamp_sec"]
-                        <= config.T_REWORK_WINDOW_SEC):
-                    window_kfs.append(burst_kfs[j])
-                else:
-                    break
+        hi_kfs.sort(key=lambda x: x["timestamp_sec"])
 
-            if len(window_kfs) >= 3:
+        # Group frames into bursts (max REWORK_BURST_GAP_SEC between consecutive frames)
+        bursts = []
+        cur_burst = [hi_kfs[0]]
+        for i in range(1, len(hi_kfs)):
+            gap = hi_kfs[i]["timestamp_sec"] - hi_kfs[i - 1]["timestamp_sec"]
+            if gap <= config.REWORK_BURST_GAP_SEC:
+                cur_burst.append(hi_kfs[i])
+            else:
+                bursts.append(cur_burst)
+                cur_burst = [hi_kfs[i]]
+        bursts.append(cur_burst)
+
+        if len(bursts) < 2:
+            continue
+
+        # Find first pair of bursts with a gap >= REWORK_MIN_GAP_SEC between them
+        for i in range(len(bursts) - 1):
+            gap_between = bursts[i + 1][0]["timestamp_sec"] - bursts[i][-1]["timestamp_sec"]
+            if gap_between >= config.REWORK_MIN_GAP_SEC:
+                start_kf = bursts[i][0]
+                end_kf = bursts[i + 1][-1]
                 events.append(_make_event(
                     "rework_proxy", video_file,
-                    window_kfs[0]["timestamp_sec"],
-                    window_kfs[-1]["timestamp_sec"],
-                    "med", 0.5,
-                    [window_kfs[0].get("frame_path", "")],
-                    {"spatial_region": region, "burst_count": len(window_kfs)},
+                    start_kf["timestamp_sec"],
+                    end_kf["timestamp_sec"],
+                    "med", 0.55,
+                    [start_kf.get("frame_path", "")],
+                    {
+                        "spatial_region": region,
+                        "burst_count": 2,
+                        "gap_sec": round(gap_between, 1),
+                    },
                 ))
                 break  # one event per region
 
@@ -387,7 +545,7 @@ def _detect_rework(kfs: List[dict], video_file: str) -> List[dict]:
 
 
 # ---------------------------------------------------------------------------
-# Sustained work  [NEW]
+# Sustained work
 # ---------------------------------------------------------------------------
 
 def _detect_sustained_work(kfs: List[dict], video_file: str) -> List[dict]:
@@ -461,13 +619,19 @@ def _detect_sustained_work(kfs: List[dict], video_file: str) -> List[dict]:
 
 
 # ---------------------------------------------------------------------------
-# PPE violations  [NEW]
+# PPE violations
 # ---------------------------------------------------------------------------
 
 def _detect_ppe_violations(kfs: List[dict], video_file: str) -> List[dict]:
     """
     Detect ppe_violation events from Gemini activity labels.
-    Fires when hard hat is explicitly False (not uncertain) with high confidence.
+
+    Fires when protective gloves are explicitly absent (False, not "uncertain")
+    during active hand work (brick_laying, mortar_application, material_handling,
+    measuring). This avoids the false-positive flood caused by checking ppe_hard_hat,
+    which is physically impossible to observe in egocentric (helmet-cam) footage —
+    the camera IS the hard hat.
+
     Only runs when Gemini labels are present.
     """
     events = []
@@ -490,9 +654,12 @@ def _detect_ppe_violations(kfs: List[dict], video_file: str) -> List[dict]:
         if label.get("confidence", 0) < config.ACTIVITY_LABEL_CONF_THRESH:
             continue
 
-        hard_hat = label.get("ppe_hard_hat")
+        activity = label.get("activity", "other")
+        gloves = label.get("ppe_gloves")
+        is_active_work = activity in config.PPE_ACTIVE_ACTIVITIES
 
-        if hard_hat is False:  # explicitly False, not "uncertain"
+        # Only flag missing gloves during active hand work
+        if is_active_work and gloves is False:
             if violation_start is None:
                 violation_start = kf
                 violation_start_sec = kf["timestamp_sec"]
@@ -521,7 +688,7 @@ def _make_ppe_event(
         "ppe_violation", video_file, start_sec, end_sec,
         "high", 0.75,
         [start_kf.get("frame_path", "")],
-        {"violation_type": "missing_hard_hat",
+        {"violation_type": "missing_gloves",
          "duration_sec": round(duration, 1)},
     )
 

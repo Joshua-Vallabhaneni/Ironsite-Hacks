@@ -90,3 +90,22 @@ T_SUSTAINED_WORK_SEC = 60.0          # min duration to fire a sustained_work eve
 # ─── Task Transition Deduplication ───────────────────────────────────────────────────────────────────
 MIN_TRANSITION_GAP_SEC = 30.0        # merge transitions closer than this
 MAX_TRANSITIONS_PER_VIDEO = 10       # hard cap per video after deduplication
+
+# ─── Rework Detection ────────────────────────────────────────────────────────────────────────────
+REWORK_MIN_GAP_SEC = 60.0            # min gap between work bursts to qualify as rework
+REWORK_BURST_GAP_SEC = 30.0          # max consecutive-frame gap within a single burst
+
+# ─── Near-Miss Detection (label-based path) ──────────────────────────────────────────────────────
+NEAR_MISS_HIGH_RISK_POSTURES = frozenset({"crouching", "reaching_overhead"})
+NEAR_MISS_ACTIVE_ACTIVITIES = frozenset({
+    "brick_laying", "mortar_application", "material_handling", "measuring",
+})
+
+# ─── PPE Glove Detection ─────────────────────────────────────────────────────────────────────────
+# Hard hat is on the camera in egocentric footage — never visible. Track gloves instead.
+PPE_ACTIVE_ACTIVITIES = frozenset({
+    "brick_laying", "mortar_application", "material_handling", "measuring",
+})
+
+# ─── Occlusion / Depth Hazard ────────────────────────────────────────────────────────────────────
+DEPTH_HAZARD_DISC_RISK_THRESH = 0.75  # discontinuity_risk threshold for occlusion detection

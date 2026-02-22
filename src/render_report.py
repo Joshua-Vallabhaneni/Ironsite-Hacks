@@ -367,8 +367,8 @@ def _rule_based_headlines(
             e.get("contributing_signals", {}).get("duration_sec", 0) for e in ppe_events
         )
         lines.append(
-            f"- **PPE ALERT:** Hard hat not observed for {total_sec/60:.1f} min "
-            f"across {len(ppe_events)} period(s) "
+            f"- **PPE ALERT:** Protective gloves not worn for {total_sec/60:.1f} min "
+            f"across {len(ppe_events)} period(s) during active work "
             f"[{ppe_events[0]['event_id']} @ {ppe_events[0]['start_time_fmt']}]"
         )
 
@@ -436,23 +436,19 @@ def _rule_based_safety(events: List[dict], metrics: dict) -> str:
             e.get("contributing_signals", {}).get("duration_sec", 0) for e in ppe_events
         )
         lines.append(
-            f"**Hard hat not observed** for {total_sec/60:.1f} min "
-            f"across {len(ppe_events)} period(s)."
+            f"**Protective gloves not worn** for {total_sec/60:.1f} min "
+            f"across {len(ppe_events)} active-work period(s)."
         )
         for e in ppe_events[:3]:
             dur = e.get("contributing_signals", {}).get("duration_sec", 0)
             lines.append(
                 f"- [{e['event_id']} @ {e['start_time_fmt']}] — "
-                f"{dur:.0f}s without hard hat (confidence: {e['confidence']:.2f})"
+                f"{dur:.0f}s without protective gloves (confidence: {e['confidence']:.2f})"
             )
         lines.append("")
     else:
-        ppe_count = safety.get("ppe_violations", 0)
-        if ppe_count == 0:
-            # Only claim compliance if we had labels to check against
-            has_labels = any(kf.get("gemini_label") for kf in [])  # conservative
-            lines.append("### PPE Compliance\n")
-            lines.append("No PPE violations flagged in labeled frames.\n")
+        lines.append("### PPE Compliance\n")
+        lines.append("No glove violations detected during active work periods.\n")
 
     # Standard OSHA categories
     safety_events = [
